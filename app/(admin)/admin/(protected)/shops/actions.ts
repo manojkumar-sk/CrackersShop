@@ -548,7 +548,7 @@ function accountAlreadyExists(error: { message: string; code?: string }) {
 }
 
 async function inviteRedirectUrl() {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
+  const configured = process.env.SITE_URL?.trim().replace(/\/$/, "");
 
   if (configured) {
     return `${configured}/auth/callback`;

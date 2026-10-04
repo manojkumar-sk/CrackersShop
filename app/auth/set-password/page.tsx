@@ -6,16 +6,28 @@ import { AdminNotice } from "@/components/admin/admin-notice";
 import { Container } from "@/components/ui/container";
 import { getAdminSession } from "@/lib/admin";
 
-export const metadata: Metadata = {
-  title: "Set password",
-  robots: { index: false, follow: false },
+type SetPasswordPageProps = {
+  searchParams: Promise<{ flow?: string }>;
 };
 
-export default async function SetPasswordPage() {
+export async function generateMetadata({
+  searchParams,
+}: SetPasswordPageProps): Promise<Metadata> {
+  const params = await searchParams;
+
+  return {
+    title: params.flow === "reset" ? "Set new password" : "Set password",
+    robots: { index: false, follow: false },
+  };
+}
+
+export default async function SetPasswordPage({ searchParams }: SetPasswordPageProps) {
+  const params = await searchParams;
+  const reset = params.flow === "reset";
   const session = await getAdminSession();
 
   if (session.status === "anonymous") {
-    redirect("/admin/login?error=invite");
+    redirect(reset ? "/admin/forgot-password?error=expired" : "/admin/login?error=invite");
   }
 
   if (session.status === "forbidden") {
@@ -27,7 +39,11 @@ export default async function SetPasswordPage() {
       <Container className="py-16">
         <AdminNotice
           title="Password setup is unavailable"
-          message="We could not verify this invite just now. Please try the link again."
+          message={
+            reset
+              ? "We could not verify this reset link just now. Please try it again."
+              : "We could not verify this invite just now. Please try the link again."
+          }
         />
       </Container>
     );
@@ -38,12 +54,14 @@ export default async function SetPasswordPage() {
       <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-8">
         <Logo href="/admin/login" />
         <h1 className="mt-6 font-display text-3xl tracking-tight text-ink">
-          Set your password
+          {reset ? "Set New Password" : "Set your password"}
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Choose a password for {session.email}, then continue to the shop admin.
+          {reset
+            ? `Choose a new password for ${session.email}. You will sign in again afterward.`
+            : `Choose a password for ${session.email}, then continue to the shop admin.`}
         </p>
-        <SetPasswordForm />
+        <SetPasswordForm mode={reset ? "reset" : "invite"} />
       </div>
     </main>
   );

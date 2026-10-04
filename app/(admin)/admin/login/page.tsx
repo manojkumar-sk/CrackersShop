@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; notice?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -29,6 +29,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         : session.status === "unavailable"
           ? "Admin sign-in is unavailable right now."
           : undefined;
+  const initialNotice =
+    params.notice === "password"
+      ? "Your password was updated. Sign in with the new password."
+      : undefined;
 
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12 sm:py-16">
@@ -40,7 +44,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className="mt-2 text-sm leading-6 text-muted">
           Sign in with a platform admin or shop admin account.
         </p>
-        <LoginForm initialError={initialError} />
+        <LoginForm initialError={initialError} initialNotice={initialNotice} />
       </div>
     </main>
   );

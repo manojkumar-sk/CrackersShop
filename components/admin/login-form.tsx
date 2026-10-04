@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserAuthClient } from "@/lib/supabase/browser";
 
@@ -19,7 +20,13 @@ function signInMessage(error: { message: string; code?: string }) {
   return "We could not sign you in. Please try again.";
 }
 
-export function LoginForm({ initialError }: { initialError?: string }) {
+export function LoginForm({
+  initialError,
+  initialNotice,
+}: {
+  initialError?: string;
+  initialNotice?: string;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -122,6 +129,19 @@ export function LoginForm({ initialError }: { initialError?: string }) {
           className="h-11 w-full rounded-full border border-line bg-background px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
         />
       </label>
+      <p className="text-sm">
+        <Link
+          href="/admin/forgot-password"
+          className="font-medium text-ink underline decoration-line underline-offset-4 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Forgot password?
+        </Link>
+      </p>
+      {initialNotice ? (
+        <p role="status" className="text-sm leading-6 text-ink">
+          {initialNotice}
+        </p>
+      ) : null}
       {error ? (
         <p role="alert" className="text-sm leading-6 text-accent-deep">
           {error}

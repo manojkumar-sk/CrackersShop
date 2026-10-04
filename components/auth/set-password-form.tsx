@@ -7,7 +7,7 @@ import { createBrowserAuthClient } from "@/lib/supabase/browser";
 const fieldClassName =
   "h-11 w-full rounded-full border border-line bg-background px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60";
 
-export function SetPasswordForm() {
+export function SetPasswordForm({ mode }: { mode: "invite" | "reset" }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -37,13 +37,22 @@ export function SetPasswordForm() {
 
     setPending(true);
     const { error: updateError } = await supabase.auth.updateUser({ password });
-    setPending(false);
 
     if (updateError) {
+      setPending(false);
       setError("We could not save that password. Please try again.");
       return;
     }
 
+    if (mode === "reset") {
+      await supabase.auth.signOut();
+      setPending(false);
+      router.push("/admin/login?notice=password");
+      router.refresh();
+      return;
+    }
+
+    setPending(false);
     router.push("/admin/dashboard");
     router.refresh();
   }
@@ -84,7 +93,7 @@ export function SetPasswordForm() {
         disabled={pending}
         className="inline-flex h-11 w-full items-center justify-center rounded-full bg-accent-strong px-5 text-sm font-medium text-accent-foreground transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
       >
-        {pending ? "Saving…" : "Save password"}
+        {pending ? "Saving…" : mode === "reset" ? "Set new password" : "Save password"}
       </button>
     </form>
   );

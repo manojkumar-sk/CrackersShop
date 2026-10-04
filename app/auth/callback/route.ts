@@ -2,10 +2,31 @@ import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createAuthClient } from "@/lib/supabase/server";
 
-const otpTypes = new Set<EmailOtpType>(["invite", "email", "signup", "magiclink"]);
+const otpTypes = new Set<EmailOtpType>([
+  "invite",
+  "email",
+  "signup",
+  "magiclink",
+  "recovery",
+]);
 
-function loginRedirect(origin: string) {
-  return NextResponse.redirect(`${origin}/admin/login?error=invite`);
+function isPasswordReset(url: URL) {
+  return (
+    url.searchParams.get("type") === "recovery" ||
+    url.searchParams.get("next") === "/auth/set-password"
+  );
+}
+
+function passwordDestination(origin: string, reset: boolean) {
+  return reset ? `${origin}/auth/set-password?flow=reset` : `${origin}/auth/set-password`;
+}
+
+function failureRedirect(url: URL) {
+  if (isPasswordReset(url)) {
+    return NextResponse.redirect(`${url.origin}/admin/forgot-password?error=expired`);
+  }
+
+  return NextResponse.redirect(`${url.origin}/admin/login?error=invite`);
 }
 
 export async function GET(request: Request) {
@@ -16,18 +37,24 @@ export async function GET(request: Request) {
   const supabase = await createAuthClient();
 
   if (!supabase) {
-    return loginRedirect(url.origin);
+    return failureRedirect(url);
+  }
+
+  const reset = isPasswordReset(url);
+
+  if ((url.searchParams.get("error") || url.searchParams.get("error_code")) && !code && !tokenHash) {
+    return failureRedirect(url);
   }
 
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return NextResponse.redirect(`${url.origin}/auth/set-password`);
+      return NextResponse.redirect(passwordDestination(url.origin, reset));
     }
 
-    console.error("Invite code exchange failed");
-    return loginRedirect(url.origin);
+    console.error("Auth code exchange failed");
+    return failureRedirect(url);
   }
 
   if (tokenHash && type && otpTypes.has(type as EmailOtpType)) {
@@ -37,29 +64,34 @@ export async function GET(request: Request) {
     });
 
     if (!error) {
-      return NextResponse.redirect(`${url.origin}/auth/set-password`);
+      return NextResponse.redirect(
+        passwordDestination(url.origin, reset || type === "recovery"),
+      );
     }
 
-    console.error("Invite verification failed");
-    return loginRedirect(url.origin);
+    console.error("Auth verification failed");
+    return failureRedirect(url);
   }
 
   return new NextResponse(
-    `<!doctype html><html lang="en"><meta charset="utf-8"><title>Accept invite</title><body><p>Finishing the invite…</p><script>
+    `<!doctype html><html lang="en"><meta charset="utf-8"><title>Continue</title><body><p>Finishing sign-in…</p><script>
       const hash = new URLSearchParams(window.location.hash.slice(1));
       const access_token = hash.get("access_token");
       const refresh_token = hash.get("refresh_token");
+      const reset = hash.get("type") === "recovery";
+      const failure = reset ? "/admin/forgot-password?error=expired" : "/admin/login?error=invite";
+      const success = reset ? "/auth/set-password?flow=reset" : "/auth/set-password";
       if (!access_token || !refresh_token) {
-        window.location.replace("/admin/login?error=invite");
+        window.location.replace(failure);
       } else {
         fetch("/auth/callback", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ access_token, refresh_token }),
         }).then((response) => {
-          window.location.replace(response.ok ? "/auth/set-password" : "/admin/login?error=invite");
+          window.location.replace(response.ok ? success : failure);
         }).catch(() => {
-          window.location.replace("/admin/login?error=invite");
+          window.location.replace(failure);
         });
       }
     </script></body></html>`,
@@ -109,9 +141,12 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    console.error("Invite session failed");
+    console.error("Auth session failed");
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  return NextResponse.json({ ok: true, next: `${url.origin}/auth/set-password` });
+  return NextResponse.json({
+    ok: true,
+    next: passwordDestination(url.origin, isPasswordReset(url)),
+  });
 }
