@@ -59,9 +59,9 @@ export function ShopMembers({
     }
 
     setNotice(
-      result.outcome === "invited"
-        ? "Invitation sent and member added."
-        : "Existing account added to this shop.",
+      result.outcome === "reinvited"
+        ? "Invitation sent. They will join this shop after they accept it."
+        : "Invitation sent and member added.",
     );
     setEmail("");
     router.refresh();
@@ -135,7 +135,7 @@ export function ShopMembers({
         </button>
       </form>
       <p className="mt-3 text-sm leading-6 text-muted">
-        A new email receives an invite for {shopName}. An existing account is added without a new login.
+        A new email receives an invite for {shopName}. Someone who was removed receives a new invite and joins only after they accept it.
       </p>
       {notice ? (
         <p role="status" className="mt-4 text-sm text-ink">

@@ -19,6 +19,7 @@ export function createServiceRoleClient() {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
+      flowType: "implicit",
     },
   });
 }

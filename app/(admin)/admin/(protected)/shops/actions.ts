@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminSession } from "@/lib/admin";
@@ -14,6 +13,8 @@ import {
   toShopPhones,
   type ShopPhone,
 } from "@/lib/shop-phones";
+import { configuredSiteOrigin } from "@/lib/site-url";
+import { stageShopInvite, unstageShopInvite } from "@/lib/shop-invite";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createAuthClient } from "@/lib/supabase/server";
 import {
@@ -548,27 +549,8 @@ function accountAlreadyExists(error: { message: string; code?: string }) {
 }
 
 async function inviteRedirectUrl() {
-  const configured = process.env.SITE_URL?.trim().replace(/\/$/, "");
-
-  if (configured) {
-    return `${configured}/auth/callback`;
-  }
-
-  const headerStore = await headers();
-  const host = (headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "")
-    .split(",")[0]
-    ?.trim();
-
-  if (!host) {
-    return null;
-  }
-
-  const forwarded = headerStore.get("x-forwarded-proto")?.split(",")[0]?.trim();
-  const proto =
-    forwarded ||
-    (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
-
-  return `${proto}://${host}/auth/callback`;
+  const origin = await configuredSiteOrigin();
+  return origin ? `${origin}/auth/callback` : null;
 }
 
 async function lookupAuthUser(supabase: SupabaseClient, email: string) {
@@ -641,10 +623,80 @@ async function ownerCount(supabase: SupabaseClient, shopId: string) {
   return count ?? 0;
 }
 
+async function shopMemberExists(
+  supabase: SupabaseClient,
+  shopId: string,
+  userId: string,
+) {
+  const existing = await supabase
+    .from("shop_members")
+    .select("user_id")
+    .eq("shop_id", shopId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing.error) {
+    console.error("Shop member lookup failed:", existing.error.message);
+    return { error: true as const, member: false };
+  }
+
+  return { error: false as const, member: Boolean(existing.data) };
+}
+
+async function sendReturningInvite(
+  email: string,
+  userId: string,
+  shopId: string,
+  role: "owner" | "admin",
+): Promise<ActionFailure | { ok: true; outcome: "reinvited" }> {
+  const staged = await stageShopInvite(userId, shopId, role);
+
+  if (!staged) {
+    return failure("We could not send the invite. Please try again.");
+  }
+
+  const service = createServiceRoleClient();
+  const redirectTo = await inviteRedirectUrl();
+
+  if (!service || !redirectTo) {
+    await unstageShopInvite(userId, shopId);
+    console.error("Shop invite is not configured: service role client is unavailable");
+    return failure("Shop invites are not configured on the server yet.");
+  }
+
+  const invited = await service.auth.admin.inviteUserByEmail(email, { redirectTo });
+
+  if (!invited.error) {
+    return { ok: true, outcome: "reinvited" };
+  }
+
+  if (!accountAlreadyExists(invited.error)) {
+    await unstageShopInvite(userId, shopId);
+    console.error("Shop invite failed:", invited.error.message);
+    return failure("We could not send the invite. Please try again.");
+  }
+
+  const resent = await service.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: false,
+      emailRedirectTo: redirectTo,
+    },
+  });
+
+  if (resent.error) {
+    await unstageShopInvite(userId, shopId);
+    console.error("Shop reinvite failed:", resent.error.message);
+    return failure("We could not send the invite. Please try again.");
+  }
+
+  return { ok: true, outcome: "reinvited" };
+}
+
 export async function addShopMember(
   shopId: string,
   formData: FormData,
-): Promise<ActionFailure | { ok: true; outcome: "invited" | "existing" }> {
+): Promise<ActionFailure | { ok: true; outcome: "invited" | "reinvited" }> {
   formData.delete("shop_id");
   formData.delete("user_id");
 
@@ -682,13 +734,17 @@ export async function addShopMember(
   }
 
   if (existingUser.id) {
-    const added = await insertShopMember(admin.supabase, shopId, existingUser.id, role);
+    const membership = await shopMemberExists(admin.supabase, shopId, existingUser.id);
 
-    if (!added.ok) {
-      return added;
+    if (membership.error) {
+      return failure("We could not add that member. Please try again.");
     }
 
-    return { ok: true, outcome: "existing" };
+    if (membership.member) {
+      return failure("User is already a member of this shop.");
+    }
+
+    return sendReturningInvite(email, existingUser.id, shopId, role);
   }
 
   const service = createServiceRoleClient();
@@ -714,13 +770,17 @@ export async function addShopMember(
         return failure("We could not send the invite. Please try again.");
       }
 
-      const added = await insertShopMember(admin.supabase, shopId, retry.id, role);
+      const membership = await shopMemberExists(admin.supabase, shopId, retry.id);
 
-      if (!added.ok) {
-        return added;
+      if (membership.error) {
+        return failure("We could not add that member. Please try again.");
       }
 
-      return { ok: true, outcome: "existing" };
+      if (membership.member) {
+        return failure("User is already a member of this shop.");
+      }
+
+      return sendReturningInvite(email, retry.id, shopId, role);
     }
 
     console.error("Shop invite failed:", invited.error?.message ?? "no user");

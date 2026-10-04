@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { acceptPendingShopInvites } from "@/lib/shop-invite";
 import { createAuthClient } from "@/lib/supabase/server";
 
 const otpTypes = new Set<EmailOtpType>([
@@ -29,6 +30,22 @@ function failureRedirect(url: URL) {
   return NextResponse.redirect(`${url.origin}/admin/login?error=invite`);
 }
 
+async function finishAuth(
+  url: URL,
+  reset: boolean,
+  supabase: NonNullable<Awaited<ReturnType<typeof createAuthClient>>>,
+) {
+  if (!reset) {
+    const accepted = await acceptPendingShopInvites(supabase);
+
+    if (!accepted) {
+      return failureRedirect(url);
+    }
+  }
+
+  return NextResponse.redirect(passwordDestination(url.origin, reset));
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -50,7 +67,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return NextResponse.redirect(passwordDestination(url.origin, reset));
+      return finishAuth(url, reset, supabase);
     }
 
     console.error("Auth code exchange failed");
@@ -64,9 +81,7 @@ export async function GET(request: Request) {
     });
 
     if (!error) {
-      return NextResponse.redirect(
-        passwordDestination(url.origin, reset || type === "recovery"),
-      );
+      return finishAuth(url, reset || type === "recovery", supabase);
     }
 
     console.error("Auth verification failed");
@@ -87,7 +102,7 @@ export async function GET(request: Request) {
         fetch("/auth/callback", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ access_token, refresh_token }),
+          body: JSON.stringify({ access_token, refresh_token, recovery: reset }),
         }).then((response) => {
           window.location.replace(response.ok ? success : failure);
         }).catch(() => {
@@ -117,6 +132,8 @@ export async function POST(request: Request) {
     body && typeof body === "object" && "refresh_token" in body
       ? body.refresh_token
       : null;
+  const recovery =
+    body && typeof body === "object" && "recovery" in body ? body.recovery === true : false;
 
   if (
     typeof accessToken !== "string" ||
@@ -145,8 +162,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
+  const reset = recovery || isPasswordReset(url);
+
+  if (!reset) {
+    const accepted = await acceptPendingShopInvites(supabase);
+
+    if (!accepted) {
+      return NextResponse.json({ ok: false }, { status: 400 });
+    }
+  }
+
   return NextResponse.json({
     ok: true,
-    next: passwordDestination(url.origin, isPasswordReset(url)),
+    next: passwordDestination(url.origin, reset),
   });
 }

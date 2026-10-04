@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { createBrowserAuthClient } from "@/lib/supabase/browser";
+import { requestPasswordReset } from "@/app/(admin)/admin/forgot-password/actions";
 
 const sentMessage =
   "If an account exists for that email, we sent a password reset link.";
@@ -18,39 +18,12 @@ export function ForgotPasswordForm({ initialError }: { initialError?: string }) 
     setError("");
     setNotice("");
 
-    const supabase = createBrowserAuthClient();
-
-    if (!supabase) {
-      setError("Password reset is not configured yet.");
-      return;
-    }
-
-    const redirectTo = `${window.location.origin}/auth/callback?next=/auth/set-password`;
     setPending(true);
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo,
-    });
+    const result = await requestPasswordReset(email);
     setPending(false);
 
-    if (resetError) {
-      const message = resetError.message.toLowerCase();
-      const code = resetError.code ?? "";
-
-      if (code === "over_request_rate_limit" || message.includes("rate limit")) {
-        setError("Please wait a moment and try again.");
-        return;
-      }
-
-      if (
-        message.includes("not found") ||
-        message.includes("does not exist") ||
-        message.includes("user not")
-      ) {
-        setNotice(sentMessage);
-        return;
-      }
-
-      setError("We could not send a reset email. Please try again.");
+    if (!result.ok) {
+      setError(result.message);
       return;
     }
 
