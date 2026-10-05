@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { ShopNotFound, ShopUnavailable } from "@/components/shop/shop-status";
 import { getPublicShop, ShopUnavailableError, type PublicShop } from "@/lib/shop";
+import { googleSiteVerification } from "@/lib/seo";
 import { site } from "@/lib/site";
 
 async function resolveShop(): Promise<
@@ -26,13 +27,14 @@ async function resolveShop(): Promise<
 
 export async function generateMetadata(): Promise<Metadata> {
   const resolved = await resolveShop();
+  const verification = googleSiteVerification();
 
   if (resolved.status === "missing") {
-    return { title: { absolute: "Shop not found" } };
+    return { title: { absolute: "Shop not found" }, verification };
   }
 
   if (resolved.status === "unavailable") {
-    return { title: { absolute: "Shop unavailable" } };
+    return { title: { absolute: "Shop unavailable" }, verification };
   }
 
   return {
@@ -42,6 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: site.description,
     robots: { index: true, follow: true },
+    verification,
   };
 }
 

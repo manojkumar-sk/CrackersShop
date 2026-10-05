@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist } from "next/font/google";
+import { googleSiteVerification } from "@/lib/seo";
 import { site, siteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -12,8 +13,6 @@ const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
 });
-
-const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -39,11 +38,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  // Set GOOGLE_SITE_VERIFICATION to the content value from Google Search Console.
-  // Leave it unset until the real code exists. Do not commit a placeholder code.
-  ...(googleSiteVerification
-    ? { verification: { google: googleSiteVerification } }
-    : {}),
+  verification: googleSiteVerification(),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

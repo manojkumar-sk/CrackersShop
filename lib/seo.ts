@@ -3,6 +3,16 @@ import type { PublicShop } from "@/lib/shop";
 import { site, siteUrl } from "@/lib/site";
 import type { Product } from "@/types/catalog";
 
+export function googleSiteVerification(): Metadata["verification"] {
+  const google = process.env.GOOGLE_SITE_VERIFICATION?.trim();
+
+  if (!google) {
+    return undefined;
+  }
+
+  return { google };
+}
+
 export function absoluteUrl(path: string) {
   if (path === "/") {
     return siteUrl;
