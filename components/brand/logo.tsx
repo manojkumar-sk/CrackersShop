@@ -93,7 +93,7 @@ export function Logo({
             {/* eslint-disable-next-line @next/next/no-img-element -- shop logos are served directly from storage */}
             <img
               src={logoUrl}
-              alt=""
+              alt={`${name} logo`}
               className={`${scale.image} rounded-full object-cover`}
             />
           </button>

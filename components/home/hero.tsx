@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { HeroSlider } from "@/components/home/hero-slider";
+import { site } from "@/lib/site";
 import type { ShopSlide } from "@/lib/slides";
+
+const pageTitleClassName =
+  "pointer-events-none absolute inset-x-4 top-6 z-10 text-center font-display text-2xl tracking-tight text-[#ffe08a] sm:inset-x-6 sm:top-10 sm:text-3xl lg:inset-x-8";
 
 export function Hero({
   slides,
@@ -16,6 +20,7 @@ export function Hero({
 
   return (
     <section aria-label={shopName} className="relative px-4 pt-28 pb-3 sm:px-6 sm:pt-36 lg:px-8">
+      <h1 className={pageTitleClassName}>{site.name}</h1>
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-24"
         aria-hidden="true"
@@ -32,9 +37,9 @@ export function Hero({
           <p className="text-xs font-semibold tracking-[0.2em] text-[#ffe08a] uppercase">
             Festival orders
           </p>
-          <h1 className="mt-2 font-display text-[1.65rem] leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
+          <h2 className="mt-2 font-display text-[1.65rem] leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
             Crackers for a brighter home celebration.
-          </h1>
+          </h2>
           <p className="mt-2 hidden max-w-xl text-sm leading-6 text-background/85 sm:block sm:text-base">
             Sparklers, flower pots, chakras, rockets, and gift boxes from one
             shop counter.

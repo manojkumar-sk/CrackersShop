@@ -24,8 +24,8 @@ export function CategorySection() {
             Pick a range.
           </h2>
           <p className="mt-3 text-base leading-7 text-muted">
-            From handheld sparklers to packed gift boxes. Open a range and pick
-            the pieces by name.
+            Browse the KG Kumaran Crackers collection, from handheld sparklers
+            to packed gift boxes. Open a range and pick the pieces by name.
           </p>
         </div>
         <Suspense fallback={<CatalogLoading label="Loading categories" />}>

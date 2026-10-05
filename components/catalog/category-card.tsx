@@ -15,7 +15,7 @@ export function CategoryCard({ category }: { category: Category }) {
           // eslint-disable-next-line @next/next/no-img-element -- public category photos are served directly from storage
           <img
             src={category.imageUrl}
-            alt=""
+            alt={category.name}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : null}

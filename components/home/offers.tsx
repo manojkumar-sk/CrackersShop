@@ -33,8 +33,8 @@ export function Offers() {
             </h2>
           </div>
           <p className="max-w-xl text-base leading-7 text-muted lg:justify-self-end">
-            Compare the marked price with the selling price on each card. For a
-            long list, the shop can pack the order as one lot.
+            Crackers offers show the marked price beside the selling price. For
+            a long list, the shop can pack the order as one lot.
           </p>
         </div>
         <ul className="mt-10 grid gap-4 lg:grid-cols-3">

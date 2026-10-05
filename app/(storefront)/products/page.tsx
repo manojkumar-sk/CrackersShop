@@ -9,14 +9,16 @@ import {
   getActiveCategories,
   getActiveProducts,
 } from "@/lib/catalog";
+import { storefrontMetadata } from "@/lib/seo";
 import { getPublicShop, ShopUnavailableError } from "@/lib/shop";
 import type { Category, Product } from "@/types/catalog";
 
-export const metadata: Metadata = {
-  title: "All Crackers",
+export const metadata: Metadata = storefrontMetadata({
+  title: "Crackers Collection",
   description:
-    "Browse sparklers, flower pots, chakras, rockets, fancy crackers, sound crackers, gift boxes, and the kids range.",
-};
+    "Browse the KG Kumaran Crackers collection: sparklers, flower pots, chakras, rockets, fancy crackers, sound crackers, gift boxes, and the kids range.",
+  path: "/products",
+});
 
 export default async function ProductsPage() {
   let categories: Category[] = [];

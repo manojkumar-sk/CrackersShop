@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { CartView } from "@/components/cart/cart-view";
 import { Container } from "@/components/ui/container";
+import { storefrontMetadata } from "@/lib/seo";
 import { getPublicShop, ShopUnavailableError } from "@/lib/shop";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = storefrontMetadata({
   title: "Cart",
   description: "Review your crackers and send the order on WhatsApp.",
-};
+  path: "/cart",
+  index: false,
+});
 
 export default async function CartPage() {
   let phones: { phoneNumber: string; isWhatsapp: boolean; isPrimary: boolean }[] = [];

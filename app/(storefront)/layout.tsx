@@ -35,14 +35,13 @@ export async function generateMetadata(): Promise<Metadata> {
     return { title: { absolute: "Shop unavailable" } };
   }
 
-  const shop = resolved.shop;
-
   return {
     title: {
-      absolute: shop.name,
-      template: `%s · ${shop.name}`,
+      default: site.title,
+      template: `%s | ${site.name}`,
     },
-    description: shop.description ?? site.description,
+    description: site.description,
+    robots: { index: true, follow: true },
   };
 }
 

@@ -29,8 +29,8 @@ export function FeaturedProducts() {
             </h2>
           </div>
           <p className="max-w-sm text-sm leading-6 text-muted">
-            Selling prices sit beside the marked price. Add a piece straight
-            from the card.
+            Fireworks and crackers from the shelf. Selling prices sit beside the
+            marked price. Add a piece straight from the card.
           </p>
         </div>
         <Suspense fallback={<CatalogLoading label="Loading featured crackers" />}>

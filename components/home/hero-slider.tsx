@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { site } from "@/lib/site";
 import type { ShopSlide } from "@/lib/slides";
 
 const advanceMs = 4500;
@@ -55,6 +56,9 @@ export function HeroSlider({ slides }: { slides: ShopSlide[] }) {
 
   return (
     <section aria-label="Promotions" className="relative px-4 pt-28 pb-3 sm:px-6 sm:pt-36 lg:px-8">
+      <h1 className="pointer-events-none absolute inset-x-4 top-6 z-10 text-center font-display text-2xl tracking-tight text-[#ffe08a] sm:inset-x-6 sm:top-10 sm:text-3xl lg:inset-x-8">
+        {site.name}
+      </h1>
       <BannerDecor />
       <div
         aria-roledescription="carousel"
@@ -86,9 +90,9 @@ export function HeroSlider({ slides }: { slides: ShopSlide[] }) {
         ))}
         <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/45 to-ink/10" />
         <div className="relative flex h-full flex-col justify-end px-4 pt-4 pb-12 sm:px-8 sm:pb-14 lg:px-10">
-          <h1 className="max-w-2xl font-display text-[1.65rem] leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
+          <h2 className="max-w-2xl font-display text-[1.65rem] leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
             {active.heading}
-          </h1>
+          </h2>
           {active.description ? (
             <p className="mt-2 hidden max-w-xl text-sm leading-6 text-background/85 sm:line-clamp-2 sm:block sm:text-base">
               {active.description}

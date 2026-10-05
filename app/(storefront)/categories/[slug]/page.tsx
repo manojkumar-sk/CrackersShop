@@ -12,6 +12,7 @@ import {
   getCategoryBySlug,
   getProductsByCategory,
 } from "@/lib/catalog";
+import { storefrontMetadata } from "@/lib/seo";
 import { getPublicShop, ShopUnavailableError } from "@/lib/shop";
 import type { Category, Product } from "@/types/catalog";
 
@@ -37,10 +38,12 @@ export async function generateMetadata({
       return { title: "Category not found" };
     }
 
-    return {
-      title: category.name,
+    return storefrontMetadata({
+      title: `${category.name} Crackers`,
       description: category.summary,
-    };
+      path: `/categories/${category.id}`,
+      image: category.imageUrl,
+    });
   } catch (error) {
     if (
       !(error instanceof CatalogUnavailableError) &&
@@ -131,7 +134,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           {/* eslint-disable-next-line @next/next/no-img-element -- public category photos are served directly from storage */}
           <img
             src={category.imageUrl}
-            alt=""
+            alt={category.name}
             className="absolute inset-0 h-full w-full object-cover"
           />
         </div>

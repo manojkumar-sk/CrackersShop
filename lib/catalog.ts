@@ -239,6 +239,41 @@ export const getCategoryBySlug = cache(
   },
 );
 
+export const getCatalogueSitemap = cache(async (shopId: string) => {
+  const supabase = await catalogClient();
+  const [products, categories] = await Promise.all([
+    supabase
+      .from("products")
+      .select("slug, updated_at")
+      .eq("shop_id", shopId)
+      .eq("is_active", true),
+    supabase
+      .from("categories")
+      .select("slug, updated_at")
+      .eq("shop_id", shopId)
+      .eq("is_active", true),
+  ]);
+
+  if (products.error) {
+    unavailable(products.error);
+  }
+
+  if (categories.error) {
+    unavailable(categories.error);
+  }
+
+  const rows = (data: { slug: string; updated_at: string | null }[] | null) =>
+    (data ?? []).flatMap((row) => {
+      const slug = row.slug.trim();
+      return slug ? [{ slug, updatedAt: row.updated_at }] : [];
+    });
+
+  return {
+    products: rows(products.data),
+    categories: rows(categories.data),
+  };
+});
+
 export const getProductsByCategory = cache(
   async (shopId: string, slug: string): Promise<Product[]> => {
     const supabase = await catalogClient();

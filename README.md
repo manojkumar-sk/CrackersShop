@@ -29,6 +29,12 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Search engines
+
+Public pages use the production origin `https://kgkumarancrackers.vercel.app` for canonical URLs, Open Graph, the sitemap, and robots.txt.
+
+To verify the site in Google Search Console, add the HTML tag method and put only the `content` value in `GOOGLE_SITE_VERIFICATION`. Leave that variable unset until Google provides the real code. Do not commit a placeholder. After the variable is set in the production environment, redeploy, then submit `https://kgkumarancrackers.vercel.app/sitemap.xml` in Search Console.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

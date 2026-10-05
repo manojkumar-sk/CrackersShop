@@ -205,7 +205,7 @@ export function CartView({
                 // eslint-disable-next-line @next/next/no-img-element -- cart photos use the stored public image URL
                 <img
                   src={item.imageUrl}
-                  alt=""
+                  alt={item.name}
                   className="size-20 shrink-0 rounded-2xl object-cover sm:size-24"
                 />
               ) : (

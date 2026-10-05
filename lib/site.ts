@@ -1,7 +1,10 @@
+export const siteUrl = "https://kgkumarancrackers.vercel.app";
+
 export const site = {
-  name: "Cracker Store",
+  name: "KG Kumaran Crackers",
+  title: "KG Kumaran Crackers | Crackers & Fireworks",
   description:
-    "Festival crackers for home celebrations — sparklers, ground pieces, rockets, and gift boxes.",
+    "KG Kumaran Crackers - Shop quality crackers and fireworks at great prices. Browse our crackers collection, offers and products online.",
 } as const;
 
 export const navLinks = [

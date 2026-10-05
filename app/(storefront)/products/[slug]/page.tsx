@@ -8,6 +8,8 @@ import {
   getActiveCategories,
   getProductBySlug,
 } from "@/lib/catalog";
+import { JsonLd } from "@/components/seo/json-ld";
+import { productJsonLd, storefrontMetadata } from "@/lib/seo";
 import { getPublicShop, ShopUnavailableError } from "@/lib/shop";
 import type { Product } from "@/types/catalog";
 
@@ -33,10 +35,12 @@ export async function generateMetadata({
       return { title: "Product not found" };
     }
 
-    return {
+    return storefrontMetadata({
       title: product.name,
       description: product.description,
-    };
+      path: `/products/${product.id}`,
+      image: product.imageUrl,
+    });
   } catch (error) {
     if (
       !(error instanceof CatalogUnavailableError) &&
@@ -104,6 +108,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <Container className="py-10 sm:py-14 lg:py-16">
+      <JsonLd data={productJsonLd(product)} />
       <ProductDetail product={product} category={category} />
     </Container>
   );
