@@ -14,7 +14,7 @@ import type { Category } from "@/types/catalog";
 
 export function CategorySection() {
   return (
-    <section id="categories" className="scroll-mt-20 bg-ink py-14 text-background sm:py-16 lg:py-20">
+    <section id="categories" className="scroll-mt-20 py-12 text-background sm:py-14 lg:py-16">
       <Container>
         <div className="max-w-2xl">
           <p className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">

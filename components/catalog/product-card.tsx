@@ -53,7 +53,7 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-line bg-surface transition duration-200 hover:-translate-y-1 hover:border-accent/40 motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-white/80 bg-white shadow-[0_16px_36px_-24px_rgba(36,18,28,0.45)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_22px_40px_-20px_rgba(196,83,29,0.35)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <Link
         href={href}
         aria-label={`View ${product.name}`}

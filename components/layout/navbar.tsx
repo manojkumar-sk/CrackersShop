@@ -62,7 +62,7 @@ export function Navbar({
   }, [isOpen, close]);
 
   return (
-    <header className="sticky top-0 z-40 bg-ink text-background">
+    <header className="sticky top-0 z-40 bg-[#1a1024] text-background shadow-[0_10px_28px_-18px_rgba(255,186,64,0.85)]">
       <div className="h-1 bg-gradient-to-r from-gold via-accent to-gold" aria-hidden="true" />
       <Container className="flex h-16 items-center gap-3">
         <Logo
@@ -111,7 +111,7 @@ export function Navbar({
             <BagIcon />
             <span className="hidden sm:inline">Cart</span>
             {ready ? (
-              <span className="grid min-w-5 place-items-center rounded-full bg-ink px-1.5 text-xs leading-5 font-semibold text-background">
+              <span className="grid min-w-5 place-items-center rounded-full bg-[#ff4d3a] px-1.5 text-xs leading-5 font-semibold text-white shadow-[0_0_0_2px_rgba(255,224,138,0.9)]">
                 {itemCount}
               </span>
             ) : null}
@@ -139,7 +139,7 @@ export function Navbar({
           aria-label="Mobile"
           aria-hidden={!isOpen}
           inert={!isOpen}
-          className="min-h-0 overflow-hidden bg-ink"
+          className="min-h-0 overflow-hidden bg-[#1a1024]"
         >
           <Container
             className={`flex max-h-[calc(100dvh-4.25rem)] flex-col gap-1 overflow-y-auto py-3 ${

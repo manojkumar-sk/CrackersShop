@@ -38,6 +38,128 @@ body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
+.festive-sky {
+  background:
+    radial-gradient(ellipse 42% 32% at 12% 8%, rgb(255 92 168 / 0.38), transparent 70%),
+    radial-gradient(ellipse 36% 28% at 88% 4%, rgb(255 176 48 / 0.42), transparent 68%),
+    radial-gradient(ellipse 34% 30% at 72% 42%, rgb(124 72 255 / 0.28), transparent 70%),
+    radial-gradient(ellipse 40% 28% at 18% 58%, rgb(255 78 46 / 0.24), transparent 72%),
+    radial-gradient(ellipse 30% 24% at 50% 18%, rgb(255 214 110 / 0.16), transparent 70%),
+    linear-gradient(180deg, #24124f 0%, #3a1870 34%, #6a245c 68%, #3d1848 100%);
+}
+
+.cracker-burst,
+.cracker-twinkle,
+.cracker-glow {
+  position: absolute;
+  pointer-events: none;
+}
+
+.cracker-burst {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  opacity: 0;
+  animation: cracker-burst var(--dur, 5s) ease-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.cracker-twinkle {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: #fff8df;
+  box-shadow: 0 0 8px 2px var(--spark, #ffd56a);
+  animation: cracker-twinkle 2.8s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.cracker-glow {
+  width: 9rem;
+  height: 9rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, var(--spark, rgb(255 196 72 / 0.55)), transparent 68%);
+  filter: blur(2px);
+  animation: cracker-glow 7s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes cracker-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+    box-shadow: 0 0 0 0 transparent;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1);
+    box-shadow:
+      0 -54px 0 0 var(--spark),
+      28px -46px 0 0 var(--spark-b),
+      50px -18px 0 0 var(--spark),
+      48px 16px 0 0 var(--spark-b),
+      24px 46px 0 0 var(--spark),
+      -8px 52px 0 0 var(--spark-b),
+      -36px 36px 0 0 var(--spark),
+      -52px 8px 0 0 var(--spark-b),
+      -46px -24px 0 0 var(--spark),
+      -22px -46px 0 0 var(--spark-b),
+      12px -22px 0 0 var(--spark),
+      -16px 18px 0 0 var(--spark-b);
+  }
+}
+
+@keyframes cracker-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.65);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cracker-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: translate3d(0, -12px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cracker-burst,
+  .cracker-twinkle,
+  .cracker-glow {
+    animation: none;
+  }
+
+  .cracker-burst {
+    opacity: 0;
+  }
+
+  .cracker-twinkle {
+    opacity: 0.75;
+  }
+
+  .cracker-glow {
+    opacity: 0.4;
+  }
+}
+
 @media print {
   header,
   footer,

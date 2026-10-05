@@ -14,7 +14,10 @@ import type { Product } from "@/types/catalog";
 
 export function FeaturedProducts() {
   return (
-    <section id="products" className="scroll-mt-20 bg-background py-14 sm:py-16 lg:py-20">
+    <section
+      id="products"
+      className="scroll-mt-20 bg-[radial-gradient(circle_at_top,rgba(255,214,120,0.38),transparent_46%),linear-gradient(#fff8ef,#fffaf3)] py-14 sm:py-16 lg:py-20"
+    >
       <Container>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-xl">

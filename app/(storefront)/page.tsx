@@ -1,5 +1,6 @@
 import { CategorySection } from "@/components/home/category-section";
 import { FeaturedProducts } from "@/components/home/featured-products";
+import { FestiveSky } from "@/components/home/festive-sky";
 import { Hero } from "@/components/home/hero";
 import { Offers } from "@/components/home/offers";
 import { Trust } from "@/components/home/trust";
@@ -32,14 +33,17 @@ export default async function HomePage() {
   }
 
   return (
-    <>
-      <Hero slides={slides} shopName={shopName} logoUrl={logoUrl} />
-      <CategorySection />
-      <FeaturedProducts />
-      <Offers />
-      <WhyChooseUs />
-      <Trust />
-      <WhatsAppBand chatUrl={chatUrl} />
-    </>
+    <div className="festive-sky relative isolate">
+      <FestiveSky />
+      <div className="relative">
+        <Hero slides={slides} shopName={shopName} logoUrl={logoUrl} />
+        <CategorySection />
+        <FeaturedProducts />
+        <Offers />
+        <WhyChooseUs />
+        <Trust />
+        <WhatsAppBand chatUrl={chatUrl} />
+      </div>
+    </div>
   );
 }

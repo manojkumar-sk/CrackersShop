@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ShopSlide } from "@/lib/slides";
 
-const advanceMs = 5500;
+const advanceMs = 4500;
+
+const frameClassName =
+  "relative h-[240px] overflow-hidden rounded-3xl bg-ink text-background shadow-[0_22px_50px_-28px_rgba(36,12,48,0.75)] sm:h-[280px] md:h-[360px] lg:h-[420px]";
 
 export function HeroSlider({ slides }: { slides: ShopSlide[] }) {
   const [index, setIndex] = useState(0);
@@ -51,100 +54,107 @@ export function HeroSlider({ slides }: { slides: ShopSlide[] }) {
   }
 
   return (
-    <section
-      aria-roledescription="carousel"
-      aria-label="Promotions"
-      className="relative isolate min-h-[32rem] overflow-hidden bg-ink text-background sm:min-h-[36rem] lg:min-h-[40rem]"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={() => setPaused(true)}
-      onTouchEnd={() => setPaused(false)}
-      onTouchCancel={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-          setPaused(false);
-        }
-      }}
-    >
-      {slides.map((slide) => (
-        <div
-          key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-700 motion-reduce:transition-none ${
-            slide.id === active.id ? "opacity-100" : "pointer-events-none opacity-0"
-          }`}
-          aria-hidden={slide.id === active.id ? undefined : true}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- banner files are served from storage */}
-          <img
-            src={slide.imageUrl}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover object-[center_30%] sm:object-center"
-          />
-        </div>
-      ))}
-      <div className="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/55 to-ink/20 sm:via-ink/45" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-ink/80 to-transparent sm:h-48" />
-      <div className="relative mx-auto flex min-h-[32rem] w-full max-w-6xl flex-col justify-end px-4 pt-28 pb-24 sm:min-h-[36rem] sm:px-6 sm:pb-28 lg:min-h-[40rem] lg:px-8 lg:pb-32">
-        <p className="text-xs font-semibold tracking-[0.22em] text-gold uppercase">
-          This season
-        </p>
-        <h1 className="mt-3 max-w-3xl font-display text-4xl leading-[1.05] tracking-tight text-balance sm:text-6xl lg:text-7xl">
-          {active.heading}
-        </h1>
-        {active.description ? (
-          <p className="mt-4 max-w-xl text-base leading-7 text-background/85 sm:text-lg">
-            {active.description}
-          </p>
-        ) : null}
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <SlideLink href={active.primaryHref}>{active.primaryLabel}</SlideLink>
-          {active.secondaryLabel && active.secondaryHref ? (
-            <SlideLink href={active.secondaryHref} secondary>
-              {active.secondaryLabel}
-            </SlideLink>
-          ) : null}
-        </div>
-      </div>
-      {count > 1 ? (
-        <>
-          <button
-            type="button"
-            aria-label="Previous slide"
-            onClick={() => show(index - 1)}
-            className="absolute top-1/2 left-3 z-10 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-xl text-ink shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:left-6"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            aria-label="Next slide"
-            onClick={() => show(index + 1)}
-            className="absolute top-1/2 right-3 z-10 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-xl text-ink shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:right-6"
-          >
-            ›
-          </button>
+    <section aria-label="Promotions" className="relative px-4 pt-4 pb-2 sm:px-6 sm:pt-6 lg:px-8">
+      <BannerDecor />
+      <div
+        aria-roledescription="carousel"
+        className={`mx-auto max-w-6xl ${frameClassName}`}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            setPaused(false);
+          }
+        }}
+      >
+        {slides.map((slide) => (
           <div
-            className="absolute inset-x-0 bottom-6 z-10 flex justify-center gap-2"
-            role="group"
-            aria-label="Slides"
+            key={slide.id}
+            className={`absolute inset-0 transition-opacity duration-700 motion-reduce:transition-none ${
+              slide.id === active.id ? "opacity-100" : "pointer-events-none opacity-0"
+            }`}
+            aria-hidden={slide.id === active.id ? undefined : true}
           >
-            {slides.map((slide, slideIndex) => (
-              <button
-                key={slide.id}
-                type="button"
-                aria-label={`Show ${slide.heading}`}
-                aria-current={slide.id === active.id ? "true" : undefined}
-                onClick={() => show(slideIndex)}
-                className={`h-2.5 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
-                  slide.id === active.id ? "w-8 bg-gold" : "w-2.5 bg-background/70"
-                }`}
-              />
-            ))}
+            {/* eslint-disable-next-line @next/next/no-img-element -- banner files are served from storage */}
+            <img
+              src={slide.imageUrl}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover object-center"
+            />
           </div>
-        </>
-      ) : null}
+        ))}
+        <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/45 to-ink/10" />
+        <div className="relative flex h-full flex-col justify-end px-4 pt-4 pb-12 sm:px-8 sm:pb-14 lg:px-10">
+          <h1 className="max-w-2xl font-display text-[1.65rem] leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
+            {active.heading}
+          </h1>
+          {active.description ? (
+            <p className="mt-2 hidden max-w-xl text-sm leading-6 text-background/85 sm:line-clamp-2 sm:block sm:text-base">
+              {active.description}
+            </p>
+          ) : null}
+          <div className="mt-3 flex max-w-md flex-col gap-2 sm:mt-4 sm:max-w-none sm:flex-row">
+            <SlideLink href={active.primaryHref}>{active.primaryLabel}</SlideLink>
+            {active.secondaryLabel && active.secondaryHref ? (
+              <SlideLink href={active.secondaryHref} secondary>
+                {active.secondaryLabel}
+              </SlideLink>
+            ) : null}
+          </div>
+        </div>
+        {count > 1 ? (
+          <>
+            <button
+              type="button"
+              aria-label="Previous slide"
+              onClick={() => show(index - 1)}
+              className="absolute top-1/2 left-3 z-10 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-lg text-ink shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:left-4 sm:size-10"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              aria-label="Next slide"
+              onClick={() => show(index + 1)}
+              className="absolute top-1/2 right-3 z-10 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-lg text-ink shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:right-4 sm:size-10"
+            >
+              ›
+            </button>
+            <div
+              className="absolute inset-x-0 bottom-3 z-10 flex justify-center gap-2"
+              role="group"
+              aria-label="Slides"
+            >
+              {slides.map((slide, slideIndex) => (
+                <button
+                  key={slide.id}
+                  type="button"
+                  aria-label={`Show ${slide.heading}`}
+                  aria-current={slide.id === active.id ? "true" : undefined}
+                  onClick={() => show(slideIndex)}
+                  className={`h-2 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
+                    slide.id === active.id
+                      ? "w-7 bg-gold"
+                      : "w-2 bg-background/70 ring-1 ring-gold/50"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        ) : null}
+      </div>
     </section>
+  );
+}
+
+function BannerDecor() {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 h-24 overflow-visible" aria-hidden="true">
+      <span className="absolute top-6 left-[8%] size-2 rounded-full bg-[#ffe08a] shadow-[0_0_12px_4px_rgba(255,210,90,0.85)]" />
+      <span className="absolute top-10 right-[10%] size-1.5 rounded-full bg-[#ffd0ea] shadow-[0_0_10px_3px_rgba(255,120,170,0.8)]" />
+      <span className="absolute top-3 left-1/2 size-16 -translate-x-1/2 rounded-full bg-[#ffb347]/30 blur-2xl" />
+    </div>
   );
 }
 
@@ -158,8 +168,8 @@ function SlideLink({
   secondary?: boolean;
 }) {
   const className = secondary
-    ? "inline-flex h-12 w-full items-center justify-center rounded-full bg-background/10 px-6 text-sm font-semibold text-background ring-1 ring-background/40 transition hover:bg-background/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:w-auto"
-    : "inline-flex h-12 w-full items-center justify-center rounded-full bg-gold px-6 text-sm font-semibold text-ink transition hover:bg-[#e6c97a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-background sm:w-auto";
+    ? "inline-flex h-10 w-full items-center justify-center rounded-full bg-background/10 px-5 text-sm font-semibold text-background ring-1 ring-background/40 transition hover:bg-background/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:w-auto"
+    : "inline-flex h-10 w-full items-center justify-center rounded-full bg-gold px-5 text-sm font-semibold text-ink transition hover:bg-[#e6c97a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-background sm:w-auto";
 
   if (href.startsWith("/")) {
     return (

@@ -8,7 +8,7 @@ export function CategoryCard({ category }: { category: Category }) {
   return (
     <Link
       href={`/categories/${category.id}`}
-      className="group relative block aspect-[3/4] overflow-hidden rounded-[1.75rem] bg-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+      className="group relative block aspect-[3/4] overflow-hidden rounded-[1.75rem] bg-ink shadow-[0_18px_40px_-22px_rgba(255,170,60,0.65)] ring-1 ring-white/20 transition duration-200 hover:-translate-y-1 hover:shadow-[0_24px_48px_-18px_rgba(255,110,50,0.75)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       <div className={`absolute inset-0 ${toneClassName[category.tone]}`}>
         {category.imageUrl ? (
