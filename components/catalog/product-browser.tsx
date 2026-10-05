@@ -194,9 +194,9 @@ export function ProductBrowser({
           ) : null}
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-6 flex min-w-0 flex-col gap-3">
           {visibleProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} layout="list" />
           ))}
         </div>
       )}

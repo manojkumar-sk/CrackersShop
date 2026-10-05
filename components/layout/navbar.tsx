@@ -64,13 +64,13 @@ export function Navbar({
   return (
     <header className="sticky top-0 z-40 bg-[#1a1024] text-background shadow-[0_10px_28px_-18px_rgba(255,186,64,0.85)]">
       <div className="h-1 bg-gradient-to-r from-gold via-accent to-gold" aria-hidden="true" />
-      <Container className="flex h-16 items-center gap-3">
+      <Container className="flex h-[4.5rem] items-center gap-3 sm:h-20">
         <Logo
           tone="inverse"
           name={shopName}
           logoUrl={logoUrl}
           onClick={close}
-          size={pathname === "/" ? "home" : "default"}
+          size="nav"
         />
         <nav
           aria-label="Primary"

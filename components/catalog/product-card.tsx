@@ -11,7 +11,13 @@ import { maxCartQuantity } from "@/lib/cart";
 import { discountPercent } from "@/lib/money";
 import type { Product } from "@/types/catalog";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  layout = "card",
+}: {
+  product: Product;
+  layout?: "card" | "list";
+}) {
   const cart = useCart();
   const [capped, setCapped] = useState(false);
   const lastClick = useRef(0);
@@ -51,6 +57,81 @@ export function ProductCard({ product }: { product: Product }) {
   function setQuantity(next: number) {
     cart.updateQuantity(product.id, next);
     setCapped(next >= maxCartQuantity);
+  }
+
+  if (layout === "list") {
+    return (
+      <article className="flex flex-col gap-3 overflow-hidden rounded-[1.6rem] border border-white/80 bg-white p-3 shadow-[0_16px_36px_-24px_rgba(36,18,28,0.45)] sm:flex-row sm:items-center sm:gap-5 sm:p-4">
+        <div className="relative w-24 shrink-0 sm:w-28">
+          <Link
+            href={href}
+            aria-label={`View ${product.name}`}
+            className="block overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            <ProductVisual product={product} className="aspect-square" />
+          </Link>
+          {product.imageUrl ? (
+            <ImagePreview
+              src={product.imageUrl}
+              alt={product.name}
+              className="absolute bottom-1.5 left-1.5 z-10 inline-flex h-8 items-center rounded-full bg-white/95 px-2.5 text-xs font-semibold text-ink shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              View
+            </ImagePreview>
+          ) : null}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold tracking-[0.16em] text-accent-strong uppercase">
+            {product.categoryName}
+          </p>
+          <h3 className="mt-1 font-display text-xl leading-tight text-ink sm:text-2xl">
+            <Link
+              href={href}
+              className="line-clamp-2 rounded-sm transition hover:text-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {product.name}
+            </Link>
+          </h3>
+        </div>
+        <div className="sm:w-36 sm:shrink-0">
+          <ProductPrice mrp={product.mrp} price={product.price} showBadge={false} />
+          {discount > 0 ? (
+            <p className="mt-1 text-xs font-semibold tracking-wide text-accent-strong">
+              {discount}% OFF
+            </p>
+          ) : null}
+        </div>
+        <div className="sm:w-44 sm:shrink-0">
+          {quantity > 0 ? (
+            <QuantitySelector
+              fullWidth
+              productName={product.name}
+              value={quantity}
+              max={maxCartQuantity}
+              onChange={setQuantity}
+              onRemove={() => {
+                setCapped(false);
+                cart.removeItem(product.id);
+              }}
+            />
+          ) : (
+            <button
+              type="button"
+              disabled={!cart.ready}
+              onClick={add}
+              className="inline-flex h-11 w-full items-center justify-center rounded-full bg-accent-strong px-4 text-sm font-semibold text-accent-foreground transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+            >
+              Add to Cart
+            </button>
+          )}
+          {capped ? (
+            <p className="mt-2 text-center text-sm text-muted">
+              You can add up to {maxCartQuantity} of this cracker.
+            </p>
+          ) : null}
+        </div>
+      </article>
+    );
   }
 
   return (

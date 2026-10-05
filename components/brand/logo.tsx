@@ -6,7 +6,7 @@ import { site } from "@/lib/site";
 
 type LogoProps = {
   tone?: "default" | "inverse";
-  size?: "default" | "home" | "hero";
+  size?: "default" | "home" | "nav" | "hero";
   onClick?: () => void;
   href?: string;
   name?: string;
@@ -23,6 +23,11 @@ const logoSizes = {
     image: "size-11 sm:size-12",
     word: "text-lg sm:text-xl",
     icon: 22,
+  },
+  nav: {
+    image: "h-14 w-auto max-w-28 sm:h-16 sm:max-w-36",
+    word: "text-base sm:text-lg",
+    icon: 24,
   },
   hero: {
     image: "size-20 sm:size-28",
@@ -94,7 +99,9 @@ export function Logo({
             <img
               src={logoUrl}
               alt={`${name} logo`}
-              className={`${scale.image} rounded-full object-cover`}
+              className={`${scale.image} ${
+                size === "nav" ? "rounded-xl object-contain" : "rounded-full object-cover"
+              }`}
             />
           </button>
           <Link
