@@ -20,7 +20,12 @@ export const metadata: Metadata = storefrontMetadata({
   path: "/products",
 });
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const { category } = await searchParams;
   let categories: Category[] = [];
   let products: Product[] = [];
   let unavailable = false;
@@ -70,6 +75,7 @@ export default async function ProductsPage() {
           <ProductBrowser
             products={products}
             categories={categories}
+            initialCategoryId={category}
             featuredIds={products
               .slice(0, featuredProductLimit)
               .map((product) => product.id)}

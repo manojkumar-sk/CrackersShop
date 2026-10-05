@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { site } from "@/lib/site";
+import { ImagePreview } from "@/components/ui/image-preview";
 import type { ShopSlide } from "@/lib/slides";
 
 const advanceMs = 4500;
@@ -89,6 +90,13 @@ export function HeroSlider({ slides }: { slides: ShopSlide[] }) {
           </div>
         ))}
         <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/45 to-ink/10" />
+        <ImagePreview
+          src={active.imageUrl}
+          alt={active.heading}
+          className="absolute top-3 left-3 z-10 inline-flex h-9 items-center rounded-full bg-background/90 px-3 text-xs font-semibold text-ink shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+        >
+          View image
+        </ImagePreview>
         <div className="relative flex h-full flex-col justify-end px-4 pt-4 pb-12 sm:px-8 sm:pb-14 lg:px-10">
           <h2 className="max-w-2xl font-display text-[1.65rem] leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
             {active.heading}

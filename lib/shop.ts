@@ -25,6 +25,9 @@ export type PublicShop = {
   address: string | null;
   email: string | null;
   businessHours: string | null;
+  mapsUrl: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export class ShopUnavailableError extends Error {
@@ -68,10 +71,24 @@ type PublicShopRow = {
   address: string | null;
   email: string | null;
   business_hours: string | null;
+  maps_url?: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
 };
 
 const publicShopColumns =
   "id, name, slug, description, logo_url, whatsapp_number, phone_number, address, email, business_hours";
+
+const publicShopMapColumns = `${publicShopColumns}, maps_url, latitude, longitude`;
+
+function coordinate(value: number | string | null | undefined) {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : null;
+}
 
 function textOrNull(value: string | null) {
   const text = value?.trim() ?? "";
@@ -107,6 +124,9 @@ function toPublicShop(row: PublicShopRow, phones: ShopPhone[]): PublicShop {
     address: textOrNull(row.address),
     email: textOrNull(row.email),
     businessHours: textOrNull(row.business_hours),
+    mapsUrl: textOrNull(row.maps_url ?? null),
+    latitude: coordinate(row.latitude),
+    longitude: coordinate(row.longitude),
   };
 }
 
@@ -228,12 +248,23 @@ async function readPublicShop(
   supabase: SupabaseClient,
   slug: string,
 ): Promise<PublicShop | null> {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("shops")
-    .select(publicShopColumns)
+    .select(publicShopMapColumns)
     .eq("slug", slug)
     .eq("active", true)
     .maybeSingle();
+
+  if (error && (error.code === "42703" || error.message.includes("maps_url"))) {
+    const fallback = await supabase
+      .from("shops")
+      .select(publicShopColumns)
+      .eq("slug", slug)
+      .eq("active", true)
+      .maybeSingle();
+    data = fallback.data as typeof data;
+    error = fallback.error;
+  }
 
   if (error) {
     console.error("Public shop lookup failed:", error.message);

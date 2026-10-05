@@ -21,6 +21,9 @@ export function ShopSettingsForm({ settings }: { settings: ShopSettings }) {
   const [address, setAddress] = useState(settings.address);
   const [email, setEmail] = useState(settings.email);
   const [businessHours, setBusinessHours] = useState(settings.businessHours);
+  const [mapsUrl, setMapsUrl] = useState(settings.mapsUrl);
+  const [latitude, setLatitude] = useState(settings.latitude);
+  const [longitude, setLongitude] = useState(settings.longitude);
   const [file, setFile] = useState<File | null>(null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -75,6 +78,9 @@ export function ShopSettingsForm({ settings }: { settings: ShopSettings }) {
       address,
       email,
       businessHours,
+      mapsUrl,
+      latitude,
+      longitude,
     });
 
     if (!parsed.ok) {
@@ -104,6 +110,9 @@ export function ShopSettingsForm({ settings }: { settings: ShopSettings }) {
     formData.set("address", address);
     formData.set("email", email);
     formData.set("businessHours", businessHours);
+    formData.set("mapsUrl", mapsUrl);
+    formData.set("latitude", latitude);
+    formData.set("longitude", longitude);
 
     appendShopPhones(formData, parsedPhones.value);
 
@@ -212,6 +221,47 @@ export function ShopSettingsForm({ settings }: { settings: ShopSettings }) {
           className="w-full rounded-2xl border border-line bg-background px-4 py-3 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
         />
       </label>
+      <label className="block">
+        <span className="mb-1.5 block text-sm font-medium text-ink">
+          Google Maps link <span className="font-normal text-muted">(optional)</span>
+        </span>
+        <input
+          name="mapsUrl"
+          value={mapsUrl}
+          disabled={!canEdit || pending}
+          onChange={(event) => setMapsUrl(event.target.value)}
+          placeholder="https://maps.google.com/..."
+          className={fieldClassName}
+        />
+      </label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-ink">
+            Latitude <span className="font-normal text-muted">(optional)</span>
+          </span>
+          <input
+            name="latitude"
+            inputMode="decimal"
+            value={latitude}
+            disabled={!canEdit || pending}
+            onChange={(event) => setLatitude(event.target.value)}
+            className={fieldClassName}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-ink">
+            Longitude <span className="font-normal text-muted">(optional)</span>
+          </span>
+          <input
+            name="longitude"
+            inputMode="decimal"
+            value={longitude}
+            disabled={!canEdit || pending}
+            onChange={(event) => setLongitude(event.target.value)}
+            className={fieldClassName}
+          />
+        </label>
+      </div>
       <label className="block">
         <span className="mb-1.5 block text-sm font-medium text-ink">
           Business hours <span className="font-normal text-muted">(optional)</span>

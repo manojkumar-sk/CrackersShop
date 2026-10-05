@@ -51,6 +51,7 @@ export function ProductDetail({
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10">
         <ProductVisual
           product={product}
+          preview
           className="aspect-square rounded-[1.75rem] ring-4 ring-gold/70 sm:aspect-[4/5] lg:aspect-square"
         />
         <div className="min-w-0 rounded-[1.75rem] border border-line bg-surface p-5 sm:p-8">

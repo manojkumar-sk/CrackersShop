@@ -6,6 +6,7 @@ import { useCart } from "@/components/cart/cart-provider";
 import { ProductPrice } from "@/components/catalog/product-price";
 import { ProductVisual } from "@/components/catalog/product-visual";
 import { QuantitySelector } from "@/components/catalog/quantity-selector";
+import { ImagePreview } from "@/components/ui/image-preview";
 import { maxCartQuantity } from "@/lib/cart";
 import { discountPercent } from "@/lib/money";
 import type { Product } from "@/types/catalog";
@@ -54,6 +55,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-white/80 bg-white shadow-[0_16px_36px_-24px_rgba(36,18,28,0.45)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_22px_40px_-20px_rgba(196,83,29,0.35)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+      <div className="relative">
       <Link
         href={href}
         aria-label={`View ${product.name}`}
@@ -69,6 +71,16 @@ export function ProductCard({ product }: { product: Product }) {
           </span>
         ) : null}
       </Link>
+      {product.imageUrl ? (
+        <ImagePreview
+          src={product.imageUrl}
+          alt={product.name}
+          className="absolute bottom-3 left-3 z-10 inline-flex h-9 items-center rounded-full bg-white/95 px-3 text-xs font-semibold text-ink shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          View
+        </ImagePreview>
+      ) : null}
+      </div>
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <p className="text-xs font-semibold tracking-[0.16em] text-accent-strong uppercase">
           {product.categoryName}

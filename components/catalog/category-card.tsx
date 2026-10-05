@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { toneClassName } from "@/components/catalog/tone";
+import { ImagePreview } from "@/components/ui/image-preview";
 import type { Category } from "@/types/catalog";
 
 export function CategoryCard({ category }: { category: Category }) {
   const itemCount = category.productCount ?? 0;
 
   return (
+    <div className="relative">
     <Link
-      href={`/categories/${category.id}`}
+      href={`/products?category=${category.id}`}
       className="group relative block aspect-[3/4] overflow-hidden rounded-[1.75rem] bg-ink shadow-[0_18px_40px_-22px_rgba(255,170,60,0.65)] ring-1 ring-white/20 transition duration-200 hover:-translate-y-1 hover:shadow-[0_24px_48px_-18px_rgba(255,110,50,0.75)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       <div className={`absolute inset-0 ${toneClassName[category.tone]}`}>
@@ -33,5 +35,15 @@ export function CategoryCard({ category }: { category: Category }) {
         </span>
       </span>
     </Link>
+    {category.imageUrl ? (
+      <ImagePreview
+        src={category.imageUrl}
+        alt={category.name}
+        className="absolute top-3 right-3 z-10 inline-flex h-9 items-center rounded-full bg-white/95 px-3 text-xs font-semibold text-ink shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+      >
+        View
+      </ImagePreview>
+    ) : null}
+    </div>
   );
 }

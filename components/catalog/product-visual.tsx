@@ -1,25 +1,43 @@
 import { badgeClassName } from "@/components/catalog/badge";
 import { toneClassName } from "@/components/catalog/tone";
+import { ImagePreview } from "@/components/ui/image-preview";
 import type { Product } from "@/types/catalog";
 
 export function ProductVisual({
   product,
   className = "aspect-[4/3]",
+  preview = false,
 }: {
   product: Product;
   className?: string;
+  preview?: boolean;
 }) {
   return (
     <div
       className={`relative overflow-hidden ${className} ${toneClassName[product.tone]}`}
     >
       {product.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- public catalogue photos are served directly from storage
-        <img
-          src={product.imageUrl}
-          alt={product.name}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        preview ? (
+          <ImagePreview
+            src={product.imageUrl}
+            alt={product.name}
+            className="absolute inset-0 h-full w-full"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- public catalogue photos are served directly from storage */}
+            <img
+              src={product.imageUrl}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          </ImagePreview>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- public catalogue photos are served directly from storage
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )
       ) : (
         <>
           <span

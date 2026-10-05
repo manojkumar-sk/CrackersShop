@@ -27,13 +27,21 @@ export function ProductBrowser({
   products,
   categories,
   featuredIds,
+  initialCategoryId = "all",
+  syncUrl = true,
 }: {
   products: Product[];
   categories: Category[];
   featuredIds: string[];
+  initialCategoryId?: string;
+  syncUrl?: boolean;
 }) {
   const [query, setQuery] = useState("");
-  const [categoryId, setCategoryId] = useState("all");
+  const [categoryId, setCategoryId] = useState(
+    categories.some((category) => category.id === initialCategoryId)
+      ? initialCategoryId
+      : "all",
+  );
   const [sort, setSort] = useState<SortOption>("featured");
 
   const visibleProducts = useMemo(() => {
@@ -82,9 +90,27 @@ export function ProductBrowser({
   const filtersActive =
     query.trim().length > 0 || categoryId !== "all" || sort !== "featured";
 
+  function chooseCategory(next: string) {
+    setCategoryId(next);
+
+    if (!syncUrl) {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+
+    if (next === "all") {
+      url.searchParams.delete("category");
+    } else {
+      url.searchParams.set("category", next);
+    }
+
+    window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+  }
+
   function clearFilters() {
     setQuery("");
-    setCategoryId("all");
+    chooseCategory("all");
     setSort("featured");
   }
 
@@ -110,23 +136,6 @@ export function ProductBrowser({
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium tracking-[0.14em] text-muted uppercase">
-            Category
-          </span>
-          <select
-            value={categoryId}
-            onChange={(event) => setCategoryId(event.target.value)}
-            className={fieldClassName}
-          >
-            <option value="all">All</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-medium tracking-[0.14em] text-muted uppercase">
             Sort
           </span>
           <select
@@ -142,6 +151,26 @@ export function ProductBrowser({
           </select>
         </label>
       </form>
+      <div className="mt-4 max-w-full min-w-0 overflow-x-auto overscroll-x-contain">
+        <div className="flex w-max min-w-full gap-2 pb-1" role="tablist" aria-label="Categories">
+          <CategoryChip
+            selected={categoryId === "all"}
+            label="All products"
+            count={products.length}
+            onClick={() => chooseCategory("all")}
+          />
+          {categories.map((category) => (
+            <CategoryChip
+              key={category.id}
+              selected={categoryId === category.id}
+              label={category.name}
+              count={category.productCount}
+              imageUrl={category.imageUrl}
+              onClick={() => chooseCategory(category.id)}
+            />
+          ))}
+        </div>
+      </div>
       <p aria-live="polite" className="mt-4 text-sm text-muted">
         {visibleProducts.length}{" "}
         {visibleProducts.length === 1 ? "cracker" : "crackers"}
@@ -172,5 +201,42 @@ export function ProductBrowser({
         </div>
       )}
     </div>
+  );
+}
+
+function CategoryChip({
+  selected,
+  label,
+  count,
+  imageUrl,
+  onClick,
+}: {
+  selected: boolean;
+  label: string;
+  count?: number;
+  imageUrl?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={selected}
+      onClick={onClick}
+      className={`inline-flex h-12 shrink-0 items-center gap-2 rounded-full border px-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+        selected
+          ? "border-ink bg-ink text-background"
+          : "border-line bg-white text-ink hover:border-accent-strong"
+      }`}
+    >
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- category photos use the stored public URL
+        <img src={imageUrl} alt="" className="size-7 rounded-full object-cover" />
+      ) : null}
+      <span>{label}</span>
+      {typeof count === "number" ? (
+        <span className={selected ? "text-background/70" : "text-muted"}>{count}</span>
+      ) : null}
+    </button>
   );
 }

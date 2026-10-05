@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ProductCard } from "@/components/catalog/product-card";
+import { ProductBrowser } from "@/components/catalog/product-browser";
 import { toneClassName } from "@/components/catalog/tone";
+import { ImagePreview } from "@/components/ui/image-preview";
 import { CatalogNotice } from "@/components/catalog/catalog-status";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import {
   CatalogUnavailableError,
+  featuredProductLimit,
+  getActiveCategories,
+  getActiveProducts,
   getCategoryBySlug,
-  getProductsByCategory,
 } from "@/lib/catalog";
 import { storefrontMetadata } from "@/lib/seo";
 import { getPublicShop, ShopUnavailableError } from "@/lib/shop";
@@ -59,7 +62,8 @@ export async function generateMetadata({
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
   let category: Category | null = null;
-  let categoryProducts: Product[] = [];
+  let categories: Category[] = [];
+  let products: Product[] = [];
   let unavailable = false;
 
   try {
@@ -69,11 +73,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       return null;
     }
 
-    category = await getCategoryBySlug(shop.id, slug);
-
-    if (category) {
-      categoryProducts = await getProductsByCategory(shop.id, slug);
-    }
+    [category, categories, products] = await Promise.all([
+      getCategoryBySlug(shop.id, slug),
+      getActiveCategories(shop.id),
+      getActiveProducts(shop.id),
+    ]);
   } catch (error) {
     if (
       !(error instanceof CatalogUnavailableError) &&
@@ -131,12 +135,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <div
           className={`relative mb-6 h-36 overflow-hidden rounded-2xl sm:h-48 lg:h-56 ${toneClassName[category.tone]}`}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- public category photos are served directly from storage */}
-          <img
-            src={category.imageUrl}
-            alt={category.name}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+          <ImagePreview src={category.imageUrl} alt={category.name} className="absolute inset-0 h-full w-full">
+            {/* eslint-disable-next-line @next/next/no-img-element -- public category photos are served directly from storage */}
+            <img src={category.imageUrl} alt="" className="h-full w-full object-cover" />
+          </ImagePreview>
         </div>
       ) : null}
       <SectionHeading
@@ -150,17 +152,15 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           Back to all crackers
         </ButtonLink>
       </div>
-      {categoryProducts.length === 0 ? (
-        <p className="mt-8 text-sm leading-6 text-muted">
-          Nothing from this range is on the shelf yet.
-        </p>
-      ) : (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
-          {categoryProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
+      <div className="mt-8">
+        <ProductBrowser
+          products={products}
+          categories={categories}
+          initialCategoryId={category.id}
+          syncUrl={false}
+          featuredIds={products.slice(0, featuredProductLimit).map((product) => product.id)}
+        />
+      </div>
     </Container>
   );
 }

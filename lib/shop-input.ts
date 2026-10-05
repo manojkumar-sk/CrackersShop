@@ -115,7 +115,59 @@ export type ShopSettingsInput = {
   address: string | null;
   email: string | null;
   businessHours: string | null;
+  mapsUrl: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
+
+function parseMapPoint(latitude: string, longitude: string) {
+  const latText = latitude.trim();
+  const lngText = longitude.trim();
+
+  if (!latText && !lngText) {
+    return { ok: true as const, latitude: null, longitude: null };
+  }
+
+  if (!latText || !lngText) {
+    return {
+      ok: false as const,
+      message: "Enter both latitude and longitude, or leave both empty.",
+    };
+  }
+
+  const lat = Number(latText);
+  const lng = Number(lngText);
+
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+    return { ok: false as const, message: "Latitude must be between -90 and 90." };
+  }
+
+  if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
+    return { ok: false as const, message: "Longitude must be between -180 and 180." };
+  }
+
+  return { ok: true as const, latitude: lat, longitude: lng };
+}
+
+function parseMapsUrl(value: string) {
+  const text = value.trim();
+
+  if (!text) {
+    return { ok: true as const, value: null };
+  }
+
+  try {
+    const url = new URL(text);
+
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      return { ok: false as const, message: "Use a full http(s) Google Maps link." };
+    }
+
+    return { ok: true as const, value: url.toString() };
+  } catch {
+    return { ok: false as const, message: "Use a full http(s) Google Maps link." };
+  }
+}
 
 export function parseShopSettings(fields: {
   name: string;
@@ -123,6 +175,9 @@ export function parseShopSettings(fields: {
   address: string;
   email: string;
   businessHours: string;
+  mapsUrl: string;
+  latitude: string;
+  longitude: string;
 }): { ok: true; value: ShopSettingsInput } | { ok: false; message: string } {
   const parsed = parseShopFields({
     ...fields,
@@ -134,6 +189,18 @@ export function parseShopSettings(fields: {
     return parsed;
   }
 
+  const mapsUrl = parseMapsUrl(fields.mapsUrl);
+
+  if (!mapsUrl.ok) {
+    return mapsUrl;
+  }
+
+  const point = parseMapPoint(fields.latitude, fields.longitude);
+
+  if (!point.ok) {
+    return point;
+  }
+
   return {
     ok: true,
     value: {
@@ -142,6 +209,9 @@ export function parseShopSettings(fields: {
       address: parsed.value.address,
       email: parsed.value.email,
       businessHours: parsed.value.businessHours,
+      mapsUrl: mapsUrl.value,
+      latitude: point.latitude,
+      longitude: point.longitude,
     },
   };
 }

@@ -20,6 +20,9 @@ export type ShopSettings = {
   address: string;
   email: string;
   businessHours: string;
+  mapsUrl: string;
+  latitude: string;
+  longitude: string;
   canEdit: boolean;
 };
 
@@ -117,10 +120,14 @@ export async function getShopSettings(): Promise<
   const { data, error } = await current.supabase
     .from("shops")
     .select(
-      "id, name, slug, description, logo_url, address, email, business_hours",
+      "id, name, slug, description, logo_url, address, email, business_hours, maps_url, latitude, longitude",
     )
     .eq("id", current.shopId)
     .maybeSingle();
+
+  if (error && (error.code === "42703" || error.message.includes("maps_url"))) {
+    return failure("Run supabase/shop_map.sql in the Supabase SQL Editor, then reload settings.");
+  }
 
   if (error) {
     console.error("Shop settings lookup failed:", error.message);
@@ -148,6 +155,9 @@ export async function getShopSettings(): Promise<
       address: data.address ?? "",
       email: data.email ?? "",
       businessHours: data.business_hours ?? "",
+      mapsUrl: data.maps_url ?? "",
+      latitude: data.latitude == null ? "" : String(data.latitude),
+      longitude: data.longitude == null ? "" : String(data.longitude),
       canEdit: current.canEdit,
     },
   };
@@ -165,6 +175,9 @@ export async function updateShopSettings(formData: FormData): Promise<ActionFail
     address: String(formData.get("address") ?? ""),
     email: String(formData.get("email") ?? ""),
     businessHours: String(formData.get("businessHours") ?? ""),
+    mapsUrl: String(formData.get("mapsUrl") ?? ""),
+    latitude: String(formData.get("latitude") ?? ""),
+    longitude: String(formData.get("longitude") ?? ""),
   });
   const phones = phonesFromForm(formData);
 
@@ -225,6 +238,9 @@ export async function updateShopSettings(formData: FormData): Promise<ActionFail
       address: parsed.value.address,
       email: parsed.value.email,
       business_hours: parsed.value.businessHours,
+      maps_url: parsed.value.mapsUrl,
+      latitude: parsed.value.latitude,
+      longitude: parsed.value.longitude,
     })
     .eq("id", current.shopId)
     .select("id, slug");
@@ -232,6 +248,11 @@ export async function updateShopSettings(formData: FormData): Promise<ActionFail
   if (error || (data?.length ?? 0) === 0 || data?.[0]?.slug !== existing.data.slug) {
     await removeStoredLogo(current.supabase, uploadedPath);
     console.error("Shop settings update failed:", error?.message ?? "slug or row mismatch");
+
+    if (error?.code === "42703" || error?.message.includes("maps_url")) {
+      return failure("Run supabase/shop_map.sql in the Supabase SQL Editor, then save again.");
+    }
+
     return failure("We could not save shop settings. Please try again.");
   }
 
