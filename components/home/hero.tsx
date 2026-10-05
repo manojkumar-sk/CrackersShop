@@ -15,7 +15,7 @@ export function Hero({
   }
 
   return (
-    <section aria-label={shopName} className="relative px-4 pt-4 pb-2 sm:px-6 sm:pt-6 lg:px-8">
+    <section aria-label={shopName} className="relative px-4 pt-28 pb-3 sm:px-6 sm:pt-36 lg:px-8">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-24"
         aria-hidden="true"

@@ -14,16 +14,16 @@ import type { Category } from "@/types/catalog";
 
 export function CategorySection() {
   return (
-    <section id="categories" className="scroll-mt-20 py-12 text-background sm:py-14 lg:py-16">
+    <section id="categories" className="scroll-mt-20 bg-[#fff6ee] py-12 text-ink sm:py-14 lg:py-16">
       <Container>
         <div className="max-w-2xl">
-          <p className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">
+          <p className="text-xs font-semibold tracking-[0.2em] text-accent-strong uppercase">
             Shop by category
           </p>
-          <h2 className="mt-3 font-display text-4xl leading-tight tracking-tight text-balance sm:text-5xl">
+          <h2 className="mt-3 font-display text-4xl leading-tight tracking-tight text-balance text-ink sm:text-5xl">
             Pick a range.
           </h2>
-          <p className="mt-3 text-base leading-7 text-background/75">
+          <p className="mt-3 text-base leading-7 text-muted">
             From handheld sparklers to packed gift boxes. Open a range and pick
             the pieces by name.
           </p>

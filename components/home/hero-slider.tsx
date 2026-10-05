@@ -54,7 +54,7 @@ export function HeroSlider({ slides }: { slides: ShopSlide[] }) {
   }
 
   return (
-    <section aria-label="Promotions" className="relative px-4 pt-4 pb-2 sm:px-6 sm:pt-6 lg:px-8">
+    <section aria-label="Promotions" className="relative px-4 pt-28 pb-3 sm:px-6 sm:pt-36 lg:px-8">
       <BannerDecor />
       <div
         aria-roledescription="carousel"
