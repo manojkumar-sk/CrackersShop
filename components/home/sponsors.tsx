@@ -20,15 +20,15 @@ export function Sponsors({ sponsors }: { sponsors: ShopSponsor[] }) {
           {sponsors.map((sponsor) => (
             <li
               key={sponsor.id}
-              className="flex w-72 shrink-0 items-center gap-3 rounded-[1.4rem] border border-line bg-white p-3 shadow-[0_12px_30px_-24px_rgba(36,18,28,0.45)]"
+              className="flex w-64 shrink-0 flex-col gap-3 rounded-[1.4rem] border border-line bg-white p-4 shadow-[0_12px_30px_-24px_rgba(36,18,28,0.45)] sm:w-72"
             >
               <ImagePreview
                 src={sponsor.logoUrl}
                 alt={sponsor.name}
-                className="grid size-16 shrink-0 place-items-center rounded-2xl bg-[#fffaf3] p-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="grid h-36 w-full place-items-center rounded-2xl bg-[#fffaf3] p-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:h-40"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- sponsor logos are stored public images */}
-                <img src={sponsor.logoUrl} alt="" className="max-h-full max-w-full object-contain" />
+                <img src={sponsor.logoUrl} alt="" className="h-full w-full object-contain" />
               </ImagePreview>
               <div className="min-w-0">
                 {sponsor.websiteUrl ? (

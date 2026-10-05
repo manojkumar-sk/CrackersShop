@@ -1,16 +1,5 @@
-import { Suspense } from "react";
-import { ProductCard } from "@/components/catalog/product-card";
-import {
-  CatalogLoading,
-  CatalogNotice,
-} from "@/components/catalog/catalog-status";
+import { ButtonLink } from "@/components/ui/button-link";
 import { Container } from "@/components/ui/container";
-import {
-  CatalogUnavailableError,
-  getFeaturedProducts,
-} from "@/lib/catalog";
-import { getPublicShop, ShopUnavailableError } from "@/lib/shop";
-import type { Product } from "@/types/catalog";
 
 export function FeaturedProducts() {
   return (
@@ -19,78 +8,22 @@ export function FeaturedProducts() {
       className="scroll-mt-20 bg-[#fffaf3] py-14 sm:py-16 lg:py-20"
     >
       <Container>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-xl">
-            <p className="text-xs font-semibold tracking-[0.2em] text-accent-strong uppercase">
-              Featured
-            </p>
-            <h2 className="mt-3 font-display text-4xl leading-tight tracking-tight text-balance text-ink sm:text-5xl">
-              Pieces people start with
-            </h2>
-          </div>
-          <p className="max-w-sm text-sm leading-6 text-muted">
-            Fireworks and crackers from the shelf. Selling prices sit beside the
-            marked price. Add a piece straight from the card.
+        <div className="mx-auto max-w-3xl rounded-[1.6rem] border border-line bg-white px-6 py-10 text-center shadow-[0_16px_36px_-24px_rgba(36,18,28,0.45)] sm:px-12 sm:py-14">
+          <p className="text-xs font-semibold tracking-[0.2em] text-accent-strong uppercase">
+            The shelf
           </p>
+          <h2 className="mt-3 font-display text-4xl leading-tight tracking-tight text-balance text-ink sm:text-5xl">
+            Browse the full crackers collection
+          </h2>
+          <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-muted sm:text-base sm:leading-7">
+            Search the shelf, filter by category, and add pieces from the shop
+            list. Prices and discounts stay on every row.
+          </p>
+          <div className="mt-8">
+            <ButtonLink href="/products">Shop Now</ButtonLink>
+          </div>
         </div>
-        <Suspense fallback={<CatalogLoading label="Loading featured crackers" />}>
-          <FeaturedGrid />
-        </Suspense>
       </Container>
     </section>
-  );
-}
-
-async function FeaturedGrid() {
-  let products: Product[] = [];
-  let unavailable = false;
-
-  try {
-    const shop = await getPublicShop();
-
-    if (!shop) {
-      return null;
-    }
-
-    products = await getFeaturedProducts(shop.id);
-  } catch (error) {
-    if (
-      !(error instanceof CatalogUnavailableError) &&
-      !(error instanceof ShopUnavailableError)
-    ) {
-      throw error;
-    }
-
-    unavailable = true;
-  }
-
-  if (unavailable) {
-    return (
-      <div className="mt-10">
-        <CatalogNotice
-          title="The shelf is unavailable"
-          message="We could not load the featured crackers just now. Please try again in a moment."
-        />
-      </div>
-    );
-  }
-
-  if (products.length === 0) {
-    return (
-      <div className="mt-10">
-        <CatalogNotice
-          title="No featured crackers yet"
-          message="Featured pieces will show here once the shelf has products."
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
-    </div>
   );
 }
