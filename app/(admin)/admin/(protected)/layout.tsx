@@ -4,7 +4,7 @@ import { AdminNotice } from "@/components/admin/admin-notice";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Container } from "@/components/ui/container";
 import { getAdminSession } from "@/lib/admin";
-import { currentShopMessage, getCurrentShop } from "@/lib/shop";
+import { canManageShopAdmins, currentShopMessage, getCurrentShop } from "@/lib/shop";
 
 export default async function ProtectedAdminLayout({
   children,
@@ -45,8 +45,12 @@ export default async function ProtectedAdminLayout({
     );
   }
 
+  const canManageAdmins =
+    shop.status === "ok" &&
+    canManageShopAdmins({ platform: session.platform, role: shop.shop.role });
+
   return (
-    <AdminShell email={session.email}>
+    <AdminShell email={session.email} canManageAdmins={canManageAdmins}>
       <AdminShopGate
         shopReady={shop.status === "ok"}
         platform={session.platform}

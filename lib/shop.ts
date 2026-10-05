@@ -10,6 +10,11 @@ export const singleShopSlug = "cracker-store";
 
 export type ShopRole = "owner" | "admin";
 
+/** Platform admins and the Cracker Store owner can manage staff. Catalogue admins cannot. */
+export function canManageShopAdmins(input: { platform: boolean; role: ShopRole | null }) {
+  return input.platform || input.role === "owner";
+}
+
 export type PublicShop = {
   id: string;
   name: string;

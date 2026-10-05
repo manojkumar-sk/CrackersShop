@@ -10,12 +10,15 @@ const catalogueLinks = [
   { href: "/admin/settings", label: "Settings" },
 ];
 
-export function AdminNav() {
+const adminLink = { href: "/admin/admins", label: "Admins" };
+
+export function AdminNav({ canManageAdmins }: { canManageAdmins: boolean }) {
   const pathname = usePathname();
+  const links = canManageAdmins ? [...catalogueLinks, adminLink] : catalogueLinks;
 
   return (
     <ul className="flex flex-wrap items-center gap-1">
-      {catalogueLinks.map((link) => {
+      {links.map((link) => {
         const active =
           link.href === "/admin/dashboard"
             ? pathname === link.href

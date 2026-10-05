@@ -209,6 +209,7 @@ export async function acceptPendingShopInvites(supabase: SessionReader) {
 
     revalidatePath(`/admin/shops/${invite.shop_id}/members`);
     revalidatePath("/admin/shops");
+    revalidatePath("/admin/admins");
   }
 
   const cleared = await writePendingInvites(user.id, []);
