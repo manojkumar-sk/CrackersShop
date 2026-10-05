@@ -57,6 +57,34 @@ export function imageFileMessage(file: File) {
   return null;
 }
 
+export function parsePricePair(mrpRaw: string, priceRaw: string) {
+  const mrp = wholeNumber(mrpRaw);
+
+  if (mrp === null || mrp <= 0) {
+    return { ok: false as const, message: "Enter an MRP greater than 0." };
+  }
+
+  const price = wholeNumber(priceRaw);
+
+  if (price === null || price <= 0) {
+    return { ok: false as const, message: "Enter a selling price greater than 0." };
+  }
+
+  if (price > mrp) {
+    return {
+      ok: false as const,
+      message: "Selling price cannot be greater than the MRP.",
+    };
+  }
+
+  return {
+    ok: true as const,
+    mrp,
+    price,
+    discount: discountPercent(mrp, price),
+  };
+}
+
 function wholeNumber(value: string) {
   const trimmed = value.trim();
 
@@ -105,24 +133,13 @@ export function parseProductFields(fields: {
     return { ok: false, message: "Use a description under 2,000 characters." };
   }
 
-  const mrp = wholeNumber(fields.mrp);
+  const prices = parsePricePair(fields.mrp, fields.price);
 
-  if (mrp === null || mrp <= 0) {
-    return { ok: false, message: "Enter an MRP greater than 0." };
+  if (!prices.ok) {
+    return prices;
   }
 
-  const price = wholeNumber(fields.price);
-
-  if (price === null || price <= 0) {
-    return { ok: false, message: "Enter a selling price greater than 0." };
-  }
-
-  if (price > mrp) {
-    return {
-      ok: false,
-      message: "Selling price cannot be greater than the MRP.",
-    };
-  }
+  const { mrp, price } = prices;
 
   const stock = wholeNumber(fields.stock);
 

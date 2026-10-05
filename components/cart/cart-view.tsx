@@ -197,7 +197,7 @@ export function CartView({
   return (
     <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="min-w-0">
-        <ul className="divide-y divide-line rounded-2xl border border-line bg-surface">
+        <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface shadow-[0_12px_32px_-22px_rgba(36,28,24,0.4)]">
           {cart.items.map((item) => (
             <li key={item.slug} className="flex gap-3 p-4 sm:gap-4 sm:p-5">
               {item.imageUrl ? (
@@ -260,14 +260,18 @@ export function CartView({
           </button>
         </div>
       </div>
-      <section className="min-w-0 rounded-2xl border border-line bg-surface p-5 sm:p-6">
+      <section className="min-w-0 rounded-3xl border border-line bg-surface p-5 shadow-[0_12px_32px_-22px_rgba(36,28,24,0.4)] sm:p-6">
         <h2 className="font-display text-2xl text-ink">Order summary</h2>
         <dl className="mt-4 space-y-2 text-sm">
           <div className="flex justify-between gap-4">
-            <dt className="text-muted">Total items</dt>
+            <dt className="text-muted">Items</dt>
+            <dd className="font-medium text-ink tabular-nums">{cart.items.length}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted">Total quantity</dt>
             <dd className="font-medium text-ink tabular-nums">{cart.itemCount}</dd>
           </div>
-          <div className="flex justify-between gap-4 text-base">
+          <div className="flex justify-between gap-4 border-t border-line pt-3 text-base">
             <dt className="font-medium text-ink">Estimated total</dt>
             <dd className="font-semibold text-ink tabular-nums">
               {formatInr(cart.subtotal)}
@@ -285,9 +289,10 @@ export function CartView({
             void sendOrder();
           }}
         >
+          <h3 className="font-display text-xl text-ink">Customer details</h3>
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-ink">
-              Customer name
+              Name
             </span>
             <input
               required
@@ -314,7 +319,7 @@ export function CartView({
           </label>
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-ink">
-              Delivery address
+              Address
             </span>
             <textarea
               required
@@ -327,7 +332,7 @@ export function CartView({
           </label>
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-ink">
-              Note <span className="font-normal text-muted">(optional)</span>
+              Additional note <span className="font-normal text-muted">(optional)</span>
             </span>
             <textarea
               value={note}
@@ -336,6 +341,21 @@ export function CartView({
               className="w-full rounded-2xl border border-line bg-background px-4 py-3 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             />
           </label>
+          <div className="rounded-2xl bg-background px-4 py-3">
+            <h3 className="font-display text-lg text-ink">Selected products</h3>
+            <ul className="mt-2 space-y-2 text-sm">
+              {cart.items.map((item) => (
+                <li key={item.slug} className="flex justify-between gap-3">
+                  <span className="min-w-0 text-muted">
+                    {item.name} × {item.quantity}
+                  </span>
+                  <span className="shrink-0 font-medium text-ink tabular-nums">
+                    {formatInr(item.price * item.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
           {priceNotice ? (
             <p role="status" className="text-sm leading-6 text-ink">
               {priceNotice}
@@ -386,7 +406,7 @@ export function CartView({
                 disabled={!meetsMinimum || pending || pdfPending}
                 className="inline-flex h-11 w-full items-center justify-center rounded-full bg-accent-strong px-5 text-sm font-medium text-accent-foreground transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
               >
-                {pending ? "Checking prices…" : "Send Order on WhatsApp"}
+                {pending ? "Checking prices…" : "Send Order via WhatsApp"}
               </button>
             ) : (
               <p className="text-sm leading-6 text-muted">

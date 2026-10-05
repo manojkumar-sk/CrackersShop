@@ -14,7 +14,7 @@ export function Hero({
   const banners = getHeroBanners();
 
   return (
-    <section className="border-b border-line">
+    <section className="border-b border-line bg-gradient-to-br from-surface via-background to-[#f6e2c4]">
       <Container className="grid items-center gap-8 py-10 sm:gap-10 sm:py-16 lg:grid-cols-2 lg:gap-14 lg:py-20">
         <div className="min-w-0">
           <Logo name={shopName} logoUrl={logoUrl} size="hero" />
@@ -29,15 +29,15 @@ export function Hero({
             shop counter. Every piece shows the marked price beside what you pay.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/#products" className="w-full sm:w-auto">
-              Shop now
+            <ButtonLink href="/products" className="w-full sm:w-auto">
+              Shop Crackers
             </ButtonLink>
             <ButtonLink
               href="/#categories"
               variant="secondary"
               className="w-full sm:w-auto"
             >
-              View categories
+              View Categories
             </ButtonLink>
           </div>
         </div>

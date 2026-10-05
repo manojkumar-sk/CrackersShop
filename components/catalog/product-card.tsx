@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
+import { ProductPrice } from "@/components/catalog/product-price";
 import { ProductVisual } from "@/components/catalog/product-visual";
+import { QuantitySelector } from "@/components/catalog/quantity-selector";
 import { maxCartQuantity } from "@/lib/cart";
-import { discountPercent, formatInr } from "@/lib/money";
 import type { Product } from "@/types/catalog";
 
 export function ProductCard({ product }: { product: Product }) {
   const cart = useCart();
   const [capped, setCapped] = useState(false);
   const lastClick = useRef(0);
-  const discount = discountPercent(product.mrp, product.price);
   const href = `/products/${product.id}`;
   const quantity = cart.ready
     ? (cart.items.find((item) => item.slug === product.id)?.quantity ?? 0)
@@ -45,37 +45,13 @@ export function ProductCard({ product }: { product: Product }) {
     setCapped(result.capped);
   }
 
-  function increase() {
-    if (!allowClick()) {
-      return;
-    }
-
-    if (quantity >= maxCartQuantity) {
-      setCapped(true);
-      return;
-    }
-
-    cart.updateQuantity(product.id, quantity + 1);
-    setCapped(false);
-  }
-
-  function decrease() {
-    if (!allowClick() || quantity < 1) {
-      return;
-    }
-
-    setCapped(false);
-
-    if (quantity <= 1) {
-      cart.removeItem(product.id);
-      return;
-    }
-
-    cart.updateQuantity(product.id, quantity - 1);
+  function setQuantity(next: number) {
+    cart.updateQuantity(product.id, next);
+    setCapped(next >= maxCartQuantity);
   }
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+    <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-[0_10px_30px_-18px_rgba(36,28,24,0.45)] transition duration-200 hover:-translate-y-0.5 hover:border-gold/80 hover:shadow-[0_16px_36px_-18px_rgba(154,53,24,0.35)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <Link
         href={href}
         aria-label={`View ${product.name}`}
@@ -97,48 +73,21 @@ export function ProductCard({ product }: { product: Product }) {
         </h3>
         <p className="mt-2 text-sm leading-6 text-muted">{product.summary}</p>
         <div className="mt-4">
-          <p className="text-sm text-muted line-through">
-            <span className="sr-only">Marked price </span>
-            MRP {formatInr(product.mrp)}
-          </p>
-          <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <p className="text-xl font-semibold text-ink tabular-nums">
-              <span className="sr-only">Selling price </span>
-              {formatInr(product.price)}
-            </p>
-            {discount > 0 ? (
-              <p className="text-sm font-semibold text-accent-strong">
-                {discount}% OFF
-              </p>
-            ) : null}
-          </div>
+          <ProductPrice mrp={product.mrp} price={product.price} />
         </div>
         {quantity > 0 ? (
-          <div
-            className="mt-5 inline-flex h-11 w-full items-center justify-between rounded-full border border-line bg-background"
-            role="group"
-            aria-label={`Quantity for ${product.name}`}
-          >
-            <button
-              type="button"
-              aria-label={`Decrease quantity of ${product.name}`}
-              onClick={decrease}
-              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-lg text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              −
-            </button>
-            <span className="min-w-8 text-center text-sm font-medium text-ink tabular-nums" aria-live="polite">
-              {quantity}
-            </span>
-            <button
-              type="button"
-              aria-label={`Increase quantity of ${product.name}`}
-              disabled={quantity >= maxCartQuantity}
-              onClick={increase}
-              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-lg text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              +
-            </button>
+          <div className="mt-5">
+            <QuantitySelector
+              fullWidth
+              productName={product.name}
+              value={quantity}
+              max={maxCartQuantity}
+              onChange={setQuantity}
+              onRemove={() => {
+                setCapped(false);
+                cart.removeItem(product.id);
+              }}
+            />
           </div>
         ) : (
           <button
@@ -152,7 +101,7 @@ export function ProductCard({ product }: { product: Product }) {
         )}
         {capped ? (
           <p className="mt-2 text-center text-sm text-muted">
-            You can add up to 20 of this cracker.
+            You can add up to {maxCartQuantity} of this cracker.
           </p>
         ) : null}
       </div>

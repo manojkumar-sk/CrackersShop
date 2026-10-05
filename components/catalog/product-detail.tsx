@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { ProductVisual } from "@/components/catalog/product-visual";
+import { ProductPrice } from "@/components/catalog/product-price";
 import { QuantitySelector } from "@/components/catalog/quantity-selector";
 import { ButtonLink } from "@/components/ui/button-link";
-import { discountPercent, formatInr } from "@/lib/money";
+import { maxCartQuantity } from "@/lib/cart";
 import type { Category, Product } from "@/types/catalog";
 
 export function ProductDetail({
@@ -20,8 +21,6 @@ export function ProductDetail({
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [capped, setCapped] = useState(false);
-  const discount = discountPercent(product.mrp, product.price);
-
   return (
     <div>
       <nav aria-label="Breadcrumb" className="text-sm text-muted">
@@ -52,7 +51,7 @@ export function ProductDetail({
       <div className="mt-6 grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
         <ProductVisual
           product={product}
-          className="aspect-square rounded-2xl sm:aspect-[4/3]"
+          className="aspect-square rounded-3xl shadow-[0_16px_40px_-24px_rgba(36,28,24,0.55)] sm:aspect-[4/3]"
         />
         <div className="min-w-0">
           {category ? (
@@ -74,26 +73,13 @@ export function ProductDetail({
             {product.description}
           </p>
           <div className="mt-6">
-            <p className="text-sm text-muted line-through">
-              <span className="sr-only">Marked price </span>
-              MRP {formatInr(product.mrp)}
-            </p>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <p className="text-3xl font-semibold text-ink tabular-nums">
-                <span className="sr-only">Selling price </span>
-                {formatInr(product.price)}
-              </p>
-              {discount > 0 ? (
-                <p className="text-sm font-semibold text-accent-strong">
-                  {discount}% OFF
-                </p>
-              ) : null}
-            </div>
+            <ProductPrice mrp={product.mrp} price={product.price} size="detail" />
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <QuantitySelector
               productName={product.name}
               value={quantity}
+              max={maxCartQuantity}
               onChange={setQuantity}
             />
             <button
@@ -133,7 +119,7 @@ export function ProductDetail({
           ) : null}
           {capped ? (
             <p className="mt-2 text-sm text-muted">
-              You can add up to 20 of this cracker.
+              You can add up to {maxCartQuantity} of this cracker.
             </p>
           ) : null}
           <div className="mt-6">

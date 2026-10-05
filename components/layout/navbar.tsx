@@ -62,8 +62,8 @@ export function Navbar({
   }, [isOpen, close]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-background/95 backdrop-blur-md">
-      <div className="h-1 bg-accent-strong" aria-hidden="true" />
+    <header className="sticky top-0 z-40 border-b border-line bg-surface/95 shadow-[0_8px_24px_-18px_rgba(36,24,18,0.45)] backdrop-blur-md">
+      <div className="h-1 bg-gradient-to-r from-accent-deep via-accent to-gold" aria-hidden="true" />
       <Container className="flex h-16 items-center gap-3">
         <Logo
           name={shopName}
@@ -75,15 +75,24 @@ export function Navbar({
           aria-label="Primary"
           className="hidden flex-1 items-center justify-center gap-x-5 xl:gap-x-7 lg:flex"
         >
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm whitespace-nowrap text-ink/80 transition hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = linkActive(link.href, pathname);
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={`rounded-full px-3 py-2 text-sm whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${
+                  active
+                    ? "bg-ink text-background"
+                    : "text-ink/80 hover:bg-background hover:text-ink"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden lg:block">
@@ -96,12 +105,12 @@ export function Navbar({
                 ? `Cart, ${itemCount} ${itemCount === 1 ? "item" : "items"}`
                 : "Cart"
             }
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-2.5 text-sm font-medium text-ink transition hover:bg-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-3"
+            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-ink px-3 text-sm font-medium text-background transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-4"
           >
             <BagIcon />
             <span className="hidden sm:inline">Cart</span>
             {ready ? (
-              <span className="grid min-w-5 place-items-center rounded-full bg-accent-strong px-1.5 text-xs leading-5 text-accent-foreground">
+              <span className="grid min-w-5 place-items-center rounded-full bg-gold px-1.5 text-xs leading-5 font-semibold text-ink">
                 {itemCount}
               </span>
             ) : null}
@@ -162,6 +171,18 @@ export function Navbar({
       </div>
     </header>
   );
+}
+
+function linkActive(href: string, pathname: string) {
+  if (href === "/") {
+    return pathname === "/";
+  }
+
+  if (href.startsWith("/#")) {
+    return false;
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function BagIcon() {

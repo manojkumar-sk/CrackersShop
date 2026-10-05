@@ -1,6 +1,6 @@
 export const cartStorageKey = "cracker-store-cart";
 
-export const maxCartQuantity = 20;
+export const maxCartQuantity = 999;
 
 export const minimumOrderValue = 2500;
 
