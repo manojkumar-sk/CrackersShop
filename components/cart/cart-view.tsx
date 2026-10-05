@@ -345,21 +345,6 @@ export function CartView({
               className="w-full rounded-2xl border border-line bg-background px-4 py-3 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             />
           </label>
-          <div className="rounded-2xl bg-background px-4 py-3">
-            <h3 className="font-display text-lg text-ink">Selected products</h3>
-            <ul className="mt-2 space-y-2 text-sm">
-              {cart.items.map((item) => (
-                <li key={item.slug} className="flex justify-between gap-3">
-                  <span className="min-w-0 text-muted">
-                    {item.name} × {item.quantity}
-                  </span>
-                  <span className="shrink-0 font-medium text-ink tabular-nums">
-                    {formatInr(item.price * item.quantity)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
           {priceNotice ? (
             <p role="status" className="text-sm leading-6 text-ink">
               {priceNotice}
