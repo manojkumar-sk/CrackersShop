@@ -13,8 +13,7 @@ import {
   toShopPhones,
   type ShopPhone,
 } from "@/lib/shop-phones";
-import { configuredSiteOrigin } from "@/lib/site-url";
-import { stageShopInvite, unstageShopInvite } from "@/lib/shop-invite";
+import { logAuthFailure, stageShopInvite, unstageShopInvite } from "@/lib/shop-invite";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createAuthClient } from "@/lib/supabase/server";
 import {
@@ -548,8 +547,8 @@ function accountAlreadyExists(error: { message: string; code?: string }) {
   );
 }
 
-async function inviteRedirectUrl() {
-  const origin = await configuredSiteOrigin();
+function inviteRedirectUrl() {
+  const origin = process.env.SITE_URL?.trim().replace(/\/$/, "");
   return origin ? `${origin}/auth/callback` : null;
 }
 
@@ -652,15 +651,21 @@ async function sendReturningInvite(
   const staged = await stageShopInvite(userId, shopId, role);
 
   if (!staged) {
+    console.error("Shop reinvite stage failed before an email was sent");
     return failure("We could not send the invite. Please try again.");
   }
 
   const service = createServiceRoleClient();
-  const redirectTo = await inviteRedirectUrl();
+  const redirectTo = inviteRedirectUrl();
 
   if (!service || !redirectTo) {
     await unstageShopInvite(userId, shopId);
-    console.error("Shop invite is not configured: service role client is unavailable");
+    console.error("Shop reinvite email client is unavailable", {
+      serviceRoleClient: Boolean(service),
+      redirectConfigured: Boolean(redirectTo),
+      supabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()),
+      serviceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()),
+    });
     return failure("Shop invites are not configured on the server yet.");
   }
 
@@ -670,9 +675,10 @@ async function sendReturningInvite(
     return { ok: true, outcome: "reinvited" };
   }
 
+  logAuthFailure("Shop reinvite inviteUserByEmail failed", invited.error);
+
   if (!accountAlreadyExists(invited.error)) {
     await unstageShopInvite(userId, shopId);
-    console.error("Shop invite failed:", invited.error.message);
     return failure("We could not send the invite. Please try again.");
   }
 
@@ -686,7 +692,7 @@ async function sendReturningInvite(
 
   if (resent.error) {
     await unstageShopInvite(userId, shopId);
-    console.error("Shop reinvite failed:", resent.error.message);
+    logAuthFailure("Shop reinvite signInWithOtp failed", resent.error);
     return failure("We could not send the invite. Please try again.");
   }
 
@@ -754,7 +760,7 @@ export async function addShopMember(
     return failure("Shop invites are not configured on the server yet.");
   }
 
-  const redirectTo = await inviteRedirectUrl();
+  const redirectTo = inviteRedirectUrl();
 
   if (!redirectTo) {
     return failure("Shop invites are not configured on the server yet.");
@@ -783,7 +789,7 @@ export async function addShopMember(
       return sendReturningInvite(email, retry.id, shopId, role);
     }
 
-    console.error("Shop invite failed:", invited.error?.message ?? "no user");
+    logAuthFailure("Shop invite inviteUserByEmail failed", invited.error);
     return failure("We could not send the invite. Please try again.");
   }
 

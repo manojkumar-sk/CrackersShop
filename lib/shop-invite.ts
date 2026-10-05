@@ -6,6 +6,27 @@ import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 const pendingKey = "pending_shop_invites";
 
+const emailInMessage = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+
+export function logAuthFailure(
+  step: string,
+  error: { name?: string; message?: string; code?: string; status?: number } | null | undefined,
+) {
+  console.error(step, {
+    name: error?.name ?? null,
+    code: error?.code ?? null,
+    status: error?.status ?? null,
+    message: (error?.message ?? "").replace(emailInMessage, "[email]"),
+  });
+}
+
+function logServiceRoleAvailability(step: string) {
+  console.error(step, {
+    supabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()),
+    serviceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()),
+  });
+}
+
 type PendingInvite = {
   shop_id: string;
   role: "owner" | "admin";
@@ -46,13 +67,14 @@ async function writePendingInvites(userId: string, invites: PendingInvite[]) {
   const service = createServiceRoleClient();
 
   if (!service) {
+    logServiceRoleAvailability("Shop invite service role client is unavailable");
     return false;
   }
 
   const current = await service.auth.admin.getUserById(userId);
 
   if (current.error || !current.data.user) {
-    console.error("Shop invite lookup failed:", current.error?.message ?? "no user");
+    logAuthFailure("Shop invite lookup failed", current.error);
     return false;
   }
 
@@ -71,7 +93,7 @@ async function writePendingInvites(userId: string, invites: PendingInvite[]) {
   });
 
   if (updated.error) {
-    console.error("Shop invite metadata update failed:", updated.error.message);
+    logAuthFailure("Shop invite metadata update failed", updated.error);
     return false;
   }
 
@@ -86,13 +108,14 @@ export async function stageShopInvite(
   const service = createServiceRoleClient();
 
   if (!service) {
+    logServiceRoleAvailability("Shop invite service role client is unavailable");
     return false;
   }
 
   const current = await service.auth.admin.getUserById(userId);
 
   if (current.error || !current.data.user) {
-    console.error("Shop invite lookup failed:", current.error?.message ?? "no user");
+    logAuthFailure("Shop invite lookup failed", current.error);
     return false;
   }
 
