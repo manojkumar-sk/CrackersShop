@@ -13,6 +13,7 @@ import {
   toShopPhones,
   type ShopPhone,
 } from "@/lib/shop-phones";
+import { configuredSiteOrigin } from "@/lib/site-url";
 import { logAuthFailure, stageShopInvite, unstageShopInvite } from "@/lib/shop-invite";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createAuthClient } from "@/lib/supabase/server";
@@ -552,6 +553,11 @@ function inviteRedirectUrl() {
   return origin ? `${origin}/auth/callback` : null;
 }
 
+async function reinviteMagicLinkRedirect() {
+  const origin = await configuredSiteOrigin();
+  return origin ? `${origin}/auth/callback` : null;
+}
+
 async function lookupAuthUser(supabase: SupabaseClient, email: string) {
   const lookup = await supabase.rpc("lookup_auth_user", { target_email: email });
 
@@ -657,19 +663,23 @@ async function sendReturningInvite(
 
   const service = createServiceRoleClient();
   const redirectTo = inviteRedirectUrl();
+  const emailRedirectTo = await reinviteMagicLinkRedirect();
 
-  if (!service || !redirectTo) {
+  if (!service || !emailRedirectTo) {
     await unstageShopInvite(userId, shopId);
     console.error("Shop reinvite email client is unavailable", {
       serviceRoleClient: Boolean(service),
-      redirectConfigured: Boolean(redirectTo),
+      redirectConfigured: Boolean(emailRedirectTo),
+      siteUrl: Boolean(process.env.SITE_URL?.trim()),
       supabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()),
       serviceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()),
     });
     return failure("Shop invites are not configured on the server yet.");
   }
 
-  const invited = await service.auth.admin.inviteUserByEmail(email, { redirectTo });
+  const invited = await service.auth.admin.inviteUserByEmail(email, {
+    redirectTo: redirectTo ?? emailRedirectTo,
+  });
 
   if (!invited.error) {
     return { ok: true, outcome: "reinvited" };
@@ -682,11 +692,19 @@ async function sendReturningInvite(
     return failure("We could not send the invite. Please try again.");
   }
 
+  let redirectHost = "invalid";
+  try {
+    redirectHost = new URL(emailRedirectTo).host;
+  } catch {
+    redirectHost = "invalid";
+  }
+  console.error("Shop reinvite signInWithOtp redirect", { host: redirectHost });
+
   const resent = await service.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: false,
-      emailRedirectTo: redirectTo,
+      emailRedirectTo,
     },
   });
 
