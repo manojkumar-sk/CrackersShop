@@ -2,6 +2,16 @@ export const cartStorageKey = "cracker-store-cart";
 
 export const maxCartQuantity = 20;
 
+export const minimumOrderValue = 2500;
+
+export function minimumOrderShortfall(total: number) {
+  return Math.max(0, minimumOrderValue - total);
+}
+
+export function meetsMinimumOrder(total: number) {
+  return total >= minimumOrderValue;
+}
+
 export type CartItem = {
   id: string;
   name: string;

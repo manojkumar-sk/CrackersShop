@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 
 export default async function CartPage() {
   let phones: { phoneNumber: string; isWhatsapp: boolean; isPrimary: boolean }[] = [];
+  let shopName = "";
+  let logoUrl: string | null = null;
 
   try {
     const shop = await getPublicShop();
@@ -19,6 +21,8 @@ export default async function CartPage() {
     }
 
     phones = shop.phones;
+    shopName = shop.name;
+    logoUrl = shop.logoUrl;
   } catch (error) {
     if (!(error instanceof ShopUnavailableError)) {
       throw error;
@@ -35,7 +39,7 @@ export default async function CartPage() {
       <h1 className="mt-2 font-display text-3xl tracking-tight text-ink sm:text-4xl">
         Cart
       </h1>
-      <CartView phones={phones} />
+      <CartView phones={phones} shopName={shopName} logoUrl={logoUrl} />
     </Container>
   );
 }

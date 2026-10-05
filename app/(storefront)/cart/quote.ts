@@ -1,6 +1,8 @@
 "use server";
 
 import { connection } from "next/server";
+import { maxCartQuantity, meetsMinimumOrder, minimumOrderShortfall, minimumOrderValue } from "@/lib/cart";
+import { formatInr } from "@/lib/money";
 import { getPublicShop, ShopUnavailableError } from "@/lib/shop";
 import { getSupabase } from "@/lib/supabase";
 
@@ -14,11 +16,30 @@ export type CartQuote = {
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export async function quoteCart(
-  slugs: string[],
+  lines: { slug: string; quantity: number }[],
 ): Promise<{ ok: true; items: CartQuote[] } | { ok: false; message: string }> {
   await connection();
 
-  const unique = [...new Set(slugs.filter((slug) => slugPattern.test(slug)))].slice(0, 40);
+  const quantities = new Map<string, number>();
+
+  for (const line of lines) {
+    if (
+      !slugPattern.test(line.slug) ||
+      !Number.isInteger(line.quantity) ||
+      line.quantity < 1 ||
+      line.quantity > maxCartQuantity
+    ) {
+      continue;
+    }
+
+    quantities.set(line.slug, line.quantity);
+
+    if (quantities.size >= 40) {
+      break;
+    }
+  }
+
+  const unique = [...quantities.keys()];
 
   if (unique.length === 0) {
     return { ok: true, items: [] };
@@ -90,6 +111,20 @@ export async function quoteCart(
       },
     ];
   });
+
+  if (items.length === unique.length) {
+    const total = items.reduce(
+      (sum, item) => sum + item.price * (quantities.get(item.slug) ?? 0),
+      0,
+    );
+
+    if (!meetsMinimumOrder(total)) {
+      return {
+        ok: false,
+        message: `Minimum order value is ${formatInr(minimumOrderValue)}. Add ${formatInr(minimumOrderShortfall(total))} more to place this order.`,
+      };
+    }
+  }
 
   return { ok: true, items };
 }

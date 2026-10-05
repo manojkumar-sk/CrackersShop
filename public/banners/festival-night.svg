@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="Festival night">
+  <rect width="1200" height="900" fill="#241c18"/>
+  <circle cx="860" cy="280" r="220" fill="none" stroke="#e7c98a" stroke-opacity="0.45" stroke-width="8"/>
+  <circle cx="860" cy="280" r="140" fill="none" stroke="#fff8f3" stroke-opacity="0.2" stroke-width="6"/>
+  <circle cx="860" cy="280" r="16" fill="#e7c98a"/>
+  <g stroke="#e7c98a" stroke-width="8" stroke-linecap="round">
+    <path d="M860 40v70"/>
+    <path d="M860 450v70"/>
+    <path d="M620 280h70"/>
+    <path d="M1030 280h70"/>
+    <path d="M690 110l50 50"/>
+    <path d="M980 400l50 50"/>
+    <path d="M980 110l-50 50"/>
+    <path d="M690 400l-50 50"/>
+  </g>
+  <circle cx="1040" cy="470" r="14" fill="#c46a45"/>
+  <circle cx="220" cy="160" r="8" fill="#e7c98a"/>
+  <circle cx="280" cy="220" r="5" fill="#fff8f3" fill-opacity="0.7"/>
+  <circle cx="160" cy="240" r="6" fill="#b8431f"/>
+</svg>

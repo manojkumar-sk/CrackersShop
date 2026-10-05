@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="Family boxes">
+  <rect width="1200" height="900" fill="#7c2b12"/>
+  <rect x="620" y="180" width="360" height="280" rx="28" fill="#e7c98a"/>
+  <rect x="650" y="250" width="300" height="18" fill="#9a3518"/>
+  <rect x="760" y="180" width="18" height="280" fill="#9a3518"/>
+  <rect x="180" y="420" width="280" height="220" rx="24" fill="#fff8f3"/>
+  <rect x="210" y="480" width="220" height="14" fill="#b8431f"/>
+  <rect x="300" y="420" width="14" height="220" fill="#b8431f"/>
+  <circle cx="980" cy="160" r="36" fill="#e7c98a"/>
+  <circle cx="140" cy="200" r="18" fill="#e7c98a" fill-opacity="0.7"/>
+</svg>

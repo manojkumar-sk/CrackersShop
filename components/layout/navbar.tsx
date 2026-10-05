@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { Logo } from "@/components/brand/logo";
 import { useCart } from "@/components/cart/cart-provider";
@@ -18,6 +19,7 @@ export function Navbar({
   shopName: string;
   logoUrl: string | null;
 }) {
+  const pathname = usePathname();
   const { isOpen, close, toggle } = useDisclosure();
   const { ready, itemCount } = useCart();
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -63,7 +65,12 @@ export function Navbar({
     <header className="sticky top-0 z-40 border-b border-line bg-background/95 backdrop-blur-md">
       <div className="h-1 bg-accent-strong" aria-hidden="true" />
       <Container className="flex h-16 items-center gap-3">
-        <Logo name={shopName} logoUrl={logoUrl} onClick={close} />
+        <Logo
+          name={shopName}
+          logoUrl={logoUrl}
+          onClick={close}
+          size={pathname === "/" ? "home" : "default"}
+        />
         <nav
           aria-label="Primary"
           className="hidden flex-1 items-center justify-center gap-x-5 xl:gap-x-7 lg:flex"

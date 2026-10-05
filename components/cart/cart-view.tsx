@@ -5,16 +5,31 @@ import { quoteCart } from "@/app/(storefront)/cart/quote";
 import { useCart } from "@/components/cart/cart-provider";
 import { QuantitySelector } from "@/components/catalog/quantity-selector";
 import { ButtonLink } from "@/components/ui/button-link";
-import { maxCartQuantity } from "@/lib/cart";
+import {
+  cartSubtotal,
+  maxCartQuantity,
+  meetsMinimumOrder,
+  minimumOrderShortfall,
+  minimumOrderValue,
+} from "@/lib/cart";
 import { parseCheckoutDetails } from "@/lib/checkout";
 import { formatInr } from "@/lib/money";
+import { downloadOrderPdf } from "@/lib/order-pdf";
 import { primaryWhatsAppNumber, type ShopPhone } from "@/lib/shop-phones";
 import { whatsAppOrderUrl } from "@/lib/whatsapp-order";
 
 const fieldClassName =
   "h-11 w-full min-w-0 rounded-full border border-line bg-surface px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
-export function CartView({ phones }: { phones: ShopPhone[] }) {
+export function CartView({
+  phones,
+  shopName,
+  logoUrl,
+}: {
+  phones: ShopPhone[];
+  shopName: string;
+  logoUrl: string | null;
+}) {
   const whatsappNumber = primaryWhatsAppNumber(phones);
   const cart = useCart();
   const [name, setName] = useState("");
@@ -26,6 +41,7 @@ export function CartView({ phones }: { phones: ShopPhone[] }) {
   const [blocked, setBlocked] = useState<string[]>([]);
   const [opened, setOpened] = useState(false);
   const [pending, setPending] = useState(false);
+  const [pdfPending, setPdfPending] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
@@ -67,6 +83,41 @@ export function CartView({ phones }: { phones: ShopPhone[] }) {
   }
 
   const blockedItems = cart.items.filter((item) => blocked.includes(item.slug));
+  const meetsMinimum = meetsMinimumOrder(cart.subtotal);
+  const shortfall = minimumOrderShortfall(cart.subtotal);
+
+  async function downloadPdf() {
+    setError("");
+
+    if (!meetsMinimumOrder(cart.subtotal)) {
+      setError(
+        `Minimum order value is ${formatInr(minimumOrderValue)}. Add ${formatInr(minimumOrderShortfall(cart.subtotal))} more to place this order.`,
+      );
+      return;
+    }
+
+    const parsed = parseCheckoutDetails({ name, mobile, address, note });
+
+    if (!parsed.ok) {
+      setError(parsed.message);
+      return;
+    }
+
+    setPdfPending(true);
+
+    try {
+      await downloadOrderPdf({
+        shopName,
+        logoUrl,
+        details: parsed.value,
+        items: cart.items,
+      });
+    } catch {
+      setError("We could not create the PDF. Please try again.");
+    } finally {
+      setPdfPending(false);
+    }
+  }
 
   async function sendOrder() {
     setError("");
@@ -80,8 +131,17 @@ export function CartView({ phones }: { phones: ShopPhone[] }) {
       return;
     }
 
+    if (!meetsMinimumOrder(cart.subtotal)) {
+      setError(
+        `Minimum order value is ${formatInr(minimumOrderValue)}. Add ${formatInr(minimumOrderShortfall(cart.subtotal))} more to place this order.`,
+      );
+      return;
+    }
+
     setPending(true);
-    const quote = await quoteCart(cart.items.map((item) => item.slug));
+    const quote = await quoteCart(
+      cart.items.map((item) => ({ slug: item.slug, quantity: item.quantity })),
+    );
     setPending(false);
 
     if (!quote.ok) {
@@ -108,6 +168,13 @@ export function CartView({ phones }: { phones: ShopPhone[] }) {
         applied.changedNames.length === 1
           ? `The selling price of ${applied.changedNames[0]} was updated. Review the total, then send the order.`
           : `Selling prices were updated for ${applied.changedNames.join(", ")}. Review the total, then send the order.`,
+      );
+      return;
+    }
+
+    if (!meetsMinimumOrder(cartSubtotal(applied.items))) {
+      setError(
+        `Minimum order value is ${formatInr(minimumOrderValue)}. Add ${formatInr(minimumOrderShortfall(cartSubtotal(applied.items)))} more to place this order.`,
       );
       return;
     }
@@ -298,19 +365,40 @@ export function CartView({ phones }: { phones: ShopPhone[] }) {
               the order.
             </p>
           ) : null}
-          {whatsappNumber ? (
+          {!meetsMinimum ? (
+            <div role="status" className="text-sm leading-6 text-ink">
+              <p>Minimum order value is {formatInr(minimumOrderValue)}</p>
+              <p>Add {formatInr(shortfall)} more to place this order.</p>
+            </div>
+          ) : null}
+          <div className="space-y-3">
             <button
-              type="submit"
-              disabled={pending}
-              className="inline-flex h-11 w-full items-center justify-center rounded-full bg-accent-strong px-5 text-sm font-medium text-accent-foreground transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+              type="button"
+              disabled={!meetsMinimum || pending || pdfPending}
+              onClick={() => void downloadPdf()}
+              className="inline-flex h-11 w-full items-center justify-center rounded-full bg-background px-5 text-sm font-medium text-ink ring-1 ring-line transition hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
             >
-              {pending ? "Checking prices…" : "Send Order on WhatsApp"}
+              {pdfPending ? "Preparing PDF…" : "Download Order PDF"}
             </button>
-          ) : (
-            <p className="text-sm leading-6 text-muted">
-              WhatsApp ordering is not available for this shop.
-            </p>
-          )}
+            {whatsappNumber ? (
+              <button
+                type="submit"
+                disabled={!meetsMinimum || pending || pdfPending}
+                className="inline-flex h-11 w-full items-center justify-center rounded-full bg-accent-strong px-5 text-sm font-medium text-accent-foreground transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+              >
+                {pending ? "Checking prices…" : "Send Order on WhatsApp"}
+              </button>
+            ) : (
+              <p className="text-sm leading-6 text-muted">
+                WhatsApp ordering is not available for this shop.
+              </p>
+            )}
+            {meetsMinimum ? (
+              <p className="text-sm leading-6 text-muted">
+                Download the PDF first, then attach it in WhatsApp before sending.
+              </p>
+            ) : null}
+          </div>
         </form>
       </section>
       {confirmClear ? (

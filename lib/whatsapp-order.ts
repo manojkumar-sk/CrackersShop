@@ -1,5 +1,5 @@
 import type { CartItem } from "@/lib/cart";
-import { cartItemCount, cartSubtotal } from "@/lib/cart";
+import { cartItemCount, cartSubtotal, meetsMinimumOrder } from "@/lib/cart";
 import type { CheckoutDetails } from "@/lib/checkout";
 import { formatInr } from "@/lib/money";
 import { primaryWhatsAppNumber, type ShopPhone } from "@/lib/shop-phones";
@@ -35,6 +35,10 @@ export function whatsAppOrderUrl(
   items: CartItem[],
   details: CheckoutDetails,
 ) {
+  if (!meetsMinimumOrder(cartSubtotal(items))) {
+    return null;
+  }
+
   const base = shopWhatsAppUrl(primaryWhatsAppNumber(phones));
 
   if (!base) {
