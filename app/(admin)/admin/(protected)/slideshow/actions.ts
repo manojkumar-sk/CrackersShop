@@ -26,7 +26,7 @@ const slideImages = "slide-images";
 const slideColumns =
   "id, image_url, image_path, heading, description, primary_label, primary_href, secondary_label, secondary_href, is_active, display_order";
 
-function failure(message: string): ActionResult {
+function failure(message: string): { ok: false; message: string } {
   return { ok: false, message };
 }
 

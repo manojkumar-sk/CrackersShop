@@ -67,7 +67,11 @@ export function Logo({
           </svg>
         </span>
       )}
-      <span className={`truncate font-display leading-none tracking-tight ${scale.word}`}>
+      <span
+        className={`min-w-0 font-display tracking-tight ${scale.word} ${
+          size === "hero" ? "leading-tight text-balance" : "truncate leading-none"
+        }`}
+      >
         {name}
       </span>
     </Link>

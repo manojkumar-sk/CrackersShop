@@ -9,6 +9,7 @@ const advanceMs = 5500;
 export function HeroSlider({ slides }: { slides: ShopSlide[] }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const count = slides.length;
 
@@ -21,7 +22,7 @@ export function HeroSlider({ slides }: { slides: ShopSlide[] }) {
   }, []);
 
   useEffect(() => {
-    if (reducedMotion || paused || count < 2) {
+    if (reducedMotion || paused || hidden || count < 2) {
       return;
     }
 
@@ -30,7 +31,14 @@ export function HeroSlider({ slides }: { slides: ShopSlide[] }) {
     }, advanceMs);
 
     return () => window.clearInterval(timer);
-  }, [count, index, paused, reducedMotion]);
+  }, [count, hidden, index, paused, reducedMotion]);
+
+  useEffect(() => {
+    const update = () => setHidden(document.hidden);
+    update();
+    document.addEventListener("visibilitychange", update);
+    return () => document.removeEventListener("visibilitychange", update);
+  }, []);
 
   if (count === 0) {
     return null;
@@ -49,6 +57,9 @@ export function HeroSlider({ slides }: { slides: ShopSlide[] }) {
       className="relative isolate min-h-[32rem] overflow-hidden bg-ink text-background sm:min-h-[36rem] lg:min-h-[40rem]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
+      onTouchCancel={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {

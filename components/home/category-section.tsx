@@ -21,7 +21,7 @@ export function CategorySection() {
             Shop by category
           </p>
           <h2 className="mt-3 font-display text-4xl leading-tight tracking-tight text-balance sm:text-5xl">
-            Eight ranges, one counter.
+            Pick a range.
           </h2>
           <p className="mt-3 text-base leading-7 text-background/75">
             From handheld sparklers to packed gift boxes. Open a range and pick
