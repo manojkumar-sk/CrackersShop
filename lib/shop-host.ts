@@ -1,3 +1,7 @@
+/**
+ * Slug and hostname helpers kept for the shops admin UI and a later return
+ * to multi-tenant routing. The storefront does not choose a shop from the host.
+ */
 export const shopSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const reservedShopSlugList = ["www", "admin", "app", "api", "auth"] as const;

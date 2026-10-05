@@ -10,15 +10,12 @@ const catalogueLinks = [
   { href: "/admin/settings", label: "Settings" },
 ];
 
-export function AdminNav({ platform }: { platform: boolean }) {
+export function AdminNav() {
   const pathname = usePathname();
-  const links = platform
-    ? [...catalogueLinks, { href: "/admin/shops", label: "Shops" }]
-    : catalogueLinks;
 
   return (
     <ul className="flex flex-wrap items-center gap-1">
-      {links.map((link) => {
+      {catalogueLinks.map((link) => {
         const active =
           link.href === "/admin/dashboard"
             ? pathname === link.href

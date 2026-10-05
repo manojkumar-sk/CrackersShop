@@ -4,11 +4,9 @@ import { Container } from "@/components/ui/container";
 
 export function AdminShell({
   email,
-  platform,
   children,
 }: {
   email: string;
-  platform: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -26,7 +24,7 @@ export function AdminShell({
             <p className="truncate text-sm text-muted">{email}</p>
           </div>
           <nav aria-label="Admin" className="sm:ml-auto">
-            <AdminNav platform={platform} />
+            <AdminNav />
           </nav>
         </Container>
       </header>

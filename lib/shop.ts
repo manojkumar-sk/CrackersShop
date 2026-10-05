@@ -1,11 +1,12 @@
 import { cache } from "react";
-import { headers } from "next/headers";
 import { connection } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { resolveHostname } from "@/lib/shop-host";
 import { loadShopPhones, type ShopPhone } from "@/lib/shop-phones";
 import { getSupabase } from "@/lib/supabase";
 import { createAuthClient } from "@/lib/supabase/server";
+
+/** The only shop this application operates. Multi-tenant tables stay in place. */
+export const singleShopSlug = "cracker-store";
 
 export type ShopRole = "owner" | "admin";
 
@@ -42,7 +43,7 @@ export type CurrentShopResult =
       shop: CurrentShop;
       supabase: SupabaseClient;
     }
-  | { status: "unavailable" | "anonymous" | "forbidden" | "no-shop" | "many-shops" };
+  | { status: "unavailable" | "anonymous" | "forbidden" | "no-shop" };
 
 type ShopRow = {
   id: string;
@@ -104,38 +105,12 @@ function toPublicShop(row: PublicShopRow, phones: ShopPhone[]): PublicShop {
   };
 }
 
-type MembershipRow = {
-  role: string;
-  shop_id: string;
-  shops: ShopRow | ShopRow[] | null;
-};
-
-function oneShop(value: ShopRow | ShopRow[] | null) {
-  if (Array.isArray(value)) {
-    return value[0] ?? null;
+function shopRole(role: string | null | undefined): ShopRole | null {
+  if (role === "owner" || role === "admin") {
+    return role;
   }
 
-  return value;
-}
-
-function membershipShop(row: MembershipRow): CurrentShop | null {
-  const shop = oneShop(row.shops);
-
-  if (!shop || !shop.active || shop.id !== row.shop_id) {
-    return null;
-  }
-
-  if (row.role !== "owner" && row.role !== "admin") {
-    return null;
-  }
-
-  return {
-    id: shop.id,
-    name: shop.name,
-    slug: shop.slug,
-    active: true,
-    role: row.role,
-  };
+  return null;
 }
 
 export function currentShopMessage(
@@ -143,10 +118,6 @@ export function currentShopMessage(
 ) {
   if (status === "no-shop") {
     return "This account is not a member of an active shop.";
-  }
-
-  if (status === "many-shops") {
-    return "This account belongs to more than one shop.";
   }
 
   if (status === "forbidden" || status === "anonymous") {
@@ -173,63 +144,85 @@ export const getCurrentShop = cache(async (): Promise<CurrentShopResult> => {
       return { status: "anonymous" };
     }
 
-    // Catalogue scope comes from this user's membership, not the hostname
-    // and not a browser-supplied shop id.
+    // Always Cracker Store. The shop id comes from this lookup, never the browser.
+    const shopResult = await supabase
+      .from("shops")
+      .select("id, name, slug, active")
+      .eq("slug", singleShopSlug)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (shopResult.error) {
+      console.error("Current shop lookup failed:", shopResult.error.message);
+      return { status: "unavailable" };
+    }
+
+    const shop = shopResult.data as ShopRow | null;
+
+    if (!shop || !shop.active || shop.slug !== singleShopSlug) {
+      return { status: "no-shop" };
+    }
+
     const membership = await supabase
       .from("shop_members")
-      .select("role, shop_id, shops!inner(id, name, slug, active)")
+      .select("role")
       .eq("user_id", userId)
-      .eq("shops.active", true);
+      .eq("shop_id", shop.id)
+      .maybeSingle();
 
     if (membership.error) {
       console.error("Shop membership lookup failed:", membership.error.message);
       return { status: "unavailable" };
     }
 
-    const shops = ((membership.data ?? []) as MembershipRow[]).flatMap((row) => {
-      const shop = membershipShop(row);
-      return shop ? [shop] : [];
-    });
+    const role = shopRole(membership.data?.role);
 
-    if (shops.length === 0) {
-      return { status: "no-shop" };
+    if (role) {
+      return {
+        status: "ok",
+        shop: {
+          id: shop.id,
+          name: shop.name,
+          slug: shop.slug,
+          active: true,
+          role,
+        },
+        supabase,
+      };
     }
 
-    if (shops.length > 1) {
-      return { status: "many-shops" };
+    const admin = await supabase.rpc("is_admin");
+
+    if (admin.error) {
+      console.error("Admin role check failed:", admin.error.message);
+      return { status: "unavailable" };
     }
 
-    return { status: "ok", shop: shops[0], supabase };
+    if (admin.data !== true) {
+      return { status: "forbidden" };
+    }
+
+    return {
+      status: "ok",
+      shop: {
+        id: shop.id,
+        name: shop.name,
+        slug: shop.slug,
+        active: true,
+        role: "admin",
+      },
+      supabase,
+    };
   } catch {
     console.error("Current shop lookup failed");
     return { status: "unavailable" };
   }
 });
 
-export const getStorefrontHost = cache(async () => {
-  await connection();
-  const headerStore = await headers();
-  const hostname = headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "";
-  return resolveHostname(hostname);
-});
-
-export async function getShopFromHostname(
-  hostname: string,
+async function readPublicShop(
+  supabase: SupabaseClient,
+  slug: string,
 ): Promise<PublicShop | null> {
-  const resolved = resolveHostname(hostname);
-
-  if (resolved.kind !== "tenant") {
-    return null;
-  }
-
-  const slug = resolved.slug;
-
-  const supabase = getSupabase();
-
-  if (!supabase) {
-    throw new ShopUnavailableError();
-  }
-
   const { data, error } = await supabase
     .from("shops")
     .select(publicShopColumns)
@@ -246,8 +239,13 @@ export async function getShopFromHostname(
     return null;
   }
 
-  const phoneResult = await loadShopPhones(supabase, data.id);
   const row = data as PublicShopRow;
+
+  if (row.slug !== slug) {
+    return null;
+  }
+
+  const phoneResult = await loadShopPhones(supabase, row.id);
   const phones = phoneResult.ok
     ? phoneResult.phones
     : phoneResult.missingTable
@@ -258,23 +256,17 @@ export async function getShopFromHostname(
     throw new ShopUnavailableError();
   }
 
-  const shop = toPublicShop(row, phones);
-
-  if (shop.slug !== slug) {
-    return null;
-  }
-
-  return shop;
+  return toPublicShop(row, phones);
 }
 
 export const getPublicShop = cache(async (): Promise<PublicShop | null> => {
-  const host = await getStorefrontHost();
+  await connection();
 
-  if (host.kind !== "tenant") {
-    return null;
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    throw new ShopUnavailableError();
   }
 
-  const headerStore = await headers();
-  const hostname = headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "";
-  return getShopFromHostname(hostname);
+  return readPublicShop(supabase, singleShopSlug);
 });

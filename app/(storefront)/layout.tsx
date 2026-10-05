@@ -3,24 +3,16 @@ import type { Metadata } from "next";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
-import { PlatformHome } from "@/components/shop/platform-home";
 import { ShopNotFound, ShopUnavailable } from "@/components/shop/shop-status";
-import { getPublicShop, getStorefrontHost, ShopUnavailableError, type PublicShop } from "@/lib/shop";
+import { getPublicShop, ShopUnavailableError, type PublicShop } from "@/lib/shop";
 import { site } from "@/lib/site";
 
 async function resolveShop(): Promise<
   | { status: "ok"; shop: PublicShop }
-  | { status: "platform" }
   | { status: "missing" }
   | { status: "unavailable" }
 > {
   try {
-    const host = await getStorefrontHost();
-
-    if (host.kind === "platform") {
-      return { status: "platform" };
-    }
-
     const shop = await getPublicShop();
     return shop ? { status: "ok", shop } : { status: "missing" };
   } catch (error) {
@@ -34,10 +26,6 @@ async function resolveShop(): Promise<
 
 export async function generateMetadata(): Promise<Metadata> {
   const resolved = await resolveShop();
-
-  if (resolved.status === "platform") {
-    return { title: { absolute: "Platform" } };
-  }
 
   if (resolved.status === "missing") {
     return { title: { absolute: "Shop not found" } };
@@ -64,10 +52,6 @@ export default async function StorefrontLayout({
   children: React.ReactNode;
 }) {
   const resolved = await resolveShop();
-
-  if (resolved.status === "platform") {
-    return <PlatformHome />;
-  }
 
   if (resolved.status === "unavailable") {
     return <ShopUnavailable />;

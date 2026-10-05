@@ -46,7 +46,7 @@ export default async function ProtectedAdminLayout({
   }
 
   return (
-    <AdminShell email={session.email} platform={session.platform}>
+    <AdminShell email={session.email}>
       <AdminShopGate
         shopReady={shop.status === "ok"}
         platform={session.platform}
