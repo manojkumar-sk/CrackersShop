@@ -21,7 +21,7 @@ export default async function AdminsPage() {
           title={denied ? "Admins are limited to the Owner" : "Admins are unavailable"}
           message={
             denied
-              ? "This account can manage the catalogue. Adding and removing admins is limited to the Owner."
+              ? "This account can manage the catalogue. Adding, removing, and resetting admin passwords is limited to the Owner."
               : result.message
           }
         />
@@ -38,8 +38,8 @@ export default async function AdminsPage() {
         Admins
       </h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-        People who can manage {result.shopName}. The Owner can add and remove people here.
-        Catalogue admins keep their existing product and category access.
+        Create staff accounts directly with an email and password. Owners can also reset staff
+        passwords when needed.
       </p>
       <AdminStaff shopName={result.shopName} members={result.members} />
     </Container>

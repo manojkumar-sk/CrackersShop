@@ -5,8 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminSession } from "@/lib/admin";
 import { isUuid } from "@/lib/product-input";
 import { canManageShopAdmins, getCurrentShop, singleShopSlug } from "@/lib/shop";
-import { logAuthFailure, stageShopInvite, unstageShopInvite } from "@/lib/shop-invite";
-import { configuredSiteOrigin } from "@/lib/site-url";
+import { logAuthFailure } from "@/lib/shop-invite";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 type ActionFailure = { ok: false; message: string };
@@ -16,7 +15,7 @@ export type ShopAdminRecord = {
   email: string;
   role: "owner" | "admin";
   createdAt: string;
-  status: "Invited" | "Active" | null;
+  status: "Active" | null;
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -55,8 +54,8 @@ async function requireStaffManager() {
   const service = createServiceRoleClient();
 
   if (!service) {
-    console.error("Admin invite is not configured: service role client is unavailable");
-    return failure("Admin invites are not configured on the server yet.");
+    console.error("Admin accounts are not configured: service role client is unavailable");
+    return failure("Admin accounts are not configured on the server yet.");
   }
 
   return {
@@ -64,11 +63,6 @@ async function requireStaffManager() {
     service,
     shopId: current.shop.id,
   };
-}
-
-async function inviteRedirectUrl() {
-  const origin = await configuredSiteOrigin();
-  return origin ? `${origin}/auth/callback` : null;
 }
 
 async function findAuthUserId(service: SupabaseClient, email: string) {
@@ -105,7 +99,7 @@ async function memberStatus(service: SupabaseClient, userId: string) {
 
   return {
     email: data.user.email ?? "Unknown account",
-    status: (data.user.last_sign_in_at ? "Active" : "Invited") as ShopAdminRecord["status"],
+    status: "Active" as const,
   };
 }
 
@@ -163,7 +157,7 @@ async function insertMember(
   }
 
   if (existing.role) {
-    return failure("That person is already an admin of this shop.");
+    return failure("This user is already an admin.");
   }
 
   const { error } = await service.from("shop_members").insert({
@@ -176,7 +170,7 @@ async function insertMember(
     console.error("Admin membership insert failed:", error.message);
 
     if (error.code === "23505") {
-      return failure("That person is already an admin of this shop.");
+      return failure("This user is already an admin.");
     }
 
     return failure("We could not add that admin. Please try again.");
@@ -186,57 +180,31 @@ async function insertMember(
   return { ok: true as const };
 }
 
-async function sendReturningInvite(
+async function addExistingAuthUser(
   service: SupabaseClient,
-  email: string,
-  userId: string,
   shopId: string,
+  userId: string,
   role: "owner" | "admin",
-): Promise<ActionFailure | { ok: true; outcome: "reinvited" }> {
-  const staged = await stageShopInvite(userId, shopId, role);
+) {
+  const current = await membership(service, shopId, userId);
 
-  if (!staged) {
-    console.error("Admin reinvite stage failed before an email was sent");
-    return failure("We could not send the invite. Please try again.");
+  if (current.error) {
+    return failure("We could not add that admin. Please try again.");
   }
 
-  const redirectTo = await inviteRedirectUrl();
-
-  if (!redirectTo) {
-    await unstageShopInvite(userId, shopId);
-    return failure("Admin invites are not configured on the server yet.");
+  if (current.role) {
+    return failure("This user is already an admin.");
   }
 
-  const invited = await service.auth.admin.inviteUserByEmail(email, { redirectTo });
+  return insertMember(service, shopId, userId, role);
+}
 
-  if (!invited.error) {
-    revalidatePath("/admin/admins");
-    return { ok: true, outcome: "reinvited" };
+async function removeCreatedAuthUser(service: SupabaseClient, userId: string) {
+  const removed = await service.auth.admin.deleteUser(userId);
+
+  if (removed.error) {
+    logAuthFailure("Admin membership rollback failed", removed.error);
   }
-
-  logAuthFailure("Admin reinvite inviteUserByEmail failed", invited.error);
-
-  if (!accountAlreadyExists(invited.error)) {
-    await unstageShopInvite(userId, shopId);
-    return failure("We could not send the invite. Please try again.");
-  }
-
-  const resent = await service.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: false,
-      emailRedirectTo: redirectTo,
-    },
-  });
-
-  if (resent.error) {
-    await unstageShopInvite(userId, shopId);
-    logAuthFailure("Admin reinvite signInWithOtp failed", resent.error);
-    return failure("We could not send the invite. Please try again.");
-  }
-
-  revalidatePath("/admin/admins");
-  return { ok: true, outcome: "reinvited" };
 }
 
 export async function listCrackerStoreAdmins(): Promise<
@@ -297,15 +265,24 @@ export async function listCrackerStoreAdmins(): Promise<
 
 export async function addCrackerStoreAdmin(
   formData: FormData,
-): Promise<ActionFailure | { ok: true; outcome: "invited" | "reinvited" }> {
+): Promise<ActionFailure | { ok: true }> {
   formData.delete("shop_id");
   formData.delete("user_id");
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
   const role = String(formData.get("role") ?? "");
 
   if (!emailPattern.test(email) || email.length > 200) {
     return failure("Enter a valid email address.");
+  }
+
+  if (password.length < 8) {
+    return failure("Use a password of at least 8 characters.");
+  }
+
+  if (password.length > 72) {
+    return failure("Use a password of 72 characters or fewer.");
   }
 
   if (role !== "owner" && role !== "admin") {
@@ -325,76 +302,47 @@ export async function addCrackerStoreAdmin(
   }
 
   if (existingUser.id) {
-    const current = await membership(manager.service, manager.shopId, existingUser.id);
-
-    if (current.error) {
-      return failure("We could not add that admin. Please try again.");
-    }
-
-    if (current.role) {
-      return failure("That person is already an admin of this shop.");
-    }
-
-    return sendReturningInvite(
-      manager.service,
-      email,
-      existingUser.id,
-      manager.shopId,
-      role,
-    );
+    return addExistingAuthUser(manager.service, manager.shopId, existingUser.id, role);
   }
 
-  const redirectTo = await inviteRedirectUrl();
+  const created = await manager.service.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
 
-  if (!redirectTo) {
-    return failure("Admin invites are not configured on the server yet.");
-  }
-
-  const invited = await manager.service.auth.admin.inviteUserByEmail(email, { redirectTo });
-
-  if (invited.error || !invited.data.user?.id) {
-    if (invited.error && accountAlreadyExists(invited.error)) {
+  if (created.error || !created.data.user?.id) {
+    if (created.error && accountAlreadyExists(created.error)) {
       const retry = await findAuthUserId(manager.service, email);
 
       if (retry.error || !retry.id) {
-        return failure("We could not send the invite. Please try again.");
+        return failure("A user with this email already exists.");
       }
 
-      const current = await membership(manager.service, manager.shopId, retry.id);
-
-      if (current.error) {
-        return failure("We could not add that admin. Please try again.");
-      }
-
-      if (current.role) {
-        return failure("That person is already an admin of this shop.");
-      }
-
-      return sendReturningInvite(manager.service, email, retry.id, manager.shopId, role);
+      return addExistingAuthUser(manager.service, manager.shopId, retry.id, role);
     }
 
-    logAuthFailure("Admin invite inviteUserByEmail failed", invited.error);
-    return failure("We could not send the invite. Please try again.");
+    logAuthFailure("Admin createUser failed", created.error);
+    return failure("We could not create that admin. Please try again.");
   }
 
   const added = await insertMember(
     manager.service,
     manager.shopId,
-    invited.data.user.id,
+    created.data.user.id,
     role,
   );
 
   if (!added.ok) {
-    if (added.message === "That person is already an admin of this shop.") {
+    if (added.message === "This user is already an admin.") {
       return added;
     }
 
-    return failure(
-      "The account was created, but we could not add them to this shop. Try again to finish adding them.",
-    );
+    await removeCreatedAuthUser(manager.service, created.data.user.id);
+    return failure("We could not add that admin. Please try again.");
   }
 
-  return { ok: true, outcome: "invited" };
+  return { ok: true };
 }
 
 export async function removeCrackerStoreAdmin(
@@ -449,5 +397,52 @@ export async function removeCrackerStoreAdmin(
   }
 
   revalidatePath("/admin/admins");
+  return { ok: true };
+}
+
+export async function resetCrackerStoreAdminPassword(
+  userId: string,
+  password: string,
+  confirmPassword: string,
+): Promise<ActionFailure | { ok: true }> {
+  if (!isUuid(userId)) {
+    return failure("We could not find that admin.");
+  }
+
+  if (password.length < 8) {
+    return failure("Use a password of at least 8 characters.");
+  }
+
+  if (password.length > 72) {
+    return failure("Use a password of 72 characters or fewer.");
+  }
+
+  if (password !== confirmPassword) {
+    return failure("The passwords do not match.");
+  }
+
+  const manager = await requireStaffManager();
+
+  if (!manager.ok) {
+    return manager;
+  }
+
+  const existing = await membership(manager.service, manager.shopId, userId);
+
+  if (existing.error) {
+    return failure("We could not reset that password. Please try again.");
+  }
+
+  if (!existing.role) {
+    return failure("We could not find that admin.");
+  }
+
+  const updated = await manager.service.auth.admin.updateUserById(userId, { password });
+
+  if (updated.error || !updated.data.user) {
+    logAuthFailure("Admin password reset failed", updated.error);
+    return failure("We could not reset that password. Please try again.");
+  }
+
   return { ok: true };
 }
