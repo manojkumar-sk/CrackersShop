@@ -8,6 +8,7 @@ const catalogueLinks = [
   { href: "/admin/products", label: "Products" },
   { href: "/admin/price-list", label: "Price List" },
   { href: "/admin/categories", label: "Categories" },
+  { href: "/admin/slideshow", label: "Slideshow" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

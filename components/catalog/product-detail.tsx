@@ -48,12 +48,12 @@ export function ProductDetail({
           </li>
         </ol>
       </nav>
-      <div className="mt-6 grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
+      <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10">
         <ProductVisual
           product={product}
-          className="aspect-square rounded-3xl shadow-[0_16px_40px_-24px_rgba(36,28,24,0.55)] sm:aspect-[4/3]"
+          className="aspect-square rounded-[1.75rem] ring-4 ring-gold/70 sm:aspect-[4/5] lg:aspect-square"
         />
-        <div className="min-w-0">
+        <div className="min-w-0 rounded-[1.75rem] border border-line bg-surface p-5 sm:p-8">
           {category ? (
             <Link
               href={`/categories/${category.id}`}
@@ -66,7 +66,7 @@ export function ProductDetail({
               {product.categoryName}
             </p>
           )}
-          <h1 className="mt-2 font-display text-3xl leading-tight tracking-tight text-balance text-ink sm:text-4xl">
+          <h1 className="mt-2 font-display text-4xl leading-tight tracking-tight text-balance text-ink sm:text-5xl">
             {product.name}
           </h1>
           <p className="mt-4 max-w-xl text-base leading-7 text-muted">
@@ -97,7 +97,7 @@ export function ProductDetail({
                 setAdded(true);
                 setCapped(result.capped);
               }}
-              className={`inline-flex h-11 w-full items-center justify-center rounded-full px-5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto sm:min-w-40 ${
+              className={`inline-flex h-12 w-full items-center justify-center rounded-full px-5 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto sm:min-w-44 ${
                 added
                   ? "bg-background text-ink ring-1 ring-line"
                   : "bg-accent-strong text-accent-foreground hover:bg-accent-deep"

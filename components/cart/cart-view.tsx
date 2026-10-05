@@ -195,9 +195,10 @@ export function CartView({
   }
 
   return (
-    <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-8">
       <div className="min-w-0">
-        <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface shadow-[0_12px_32px_-22px_rgba(36,28,24,0.4)]">
+        <h2 className="font-display text-2xl text-ink">Cart items</h2>
+        <ul className="mt-4 divide-y divide-line overflow-hidden rounded-[1.6rem] border border-line bg-surface">
           {cart.items.map((item) => (
             <li key={item.slug} className="flex gap-3 p-4 sm:gap-4 sm:p-5">
               {item.imageUrl ? (
@@ -205,10 +206,10 @@ export function CartView({
                 <img
                   src={item.imageUrl}
                   alt=""
-                  className="size-16 shrink-0 rounded-xl object-cover sm:size-20"
+                  className="size-20 shrink-0 rounded-2xl object-cover sm:size-24"
                 />
               ) : (
-                <span className="grid size-16 shrink-0 place-items-center rounded-xl bg-background text-[10px] text-muted sm:size-20">
+                <span className="grid size-20 shrink-0 place-items-center rounded-2xl bg-background text-[10px] text-muted sm:size-24">
                   No image
                 </span>
               )}
@@ -247,10 +248,7 @@ export function CartView({
             </li>
           ))}
         </ul>
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <ButtonLink href="/products" variant="secondary">
-            Continue Shopping
-          </ButtonLink>
+        <div className="mt-4 flex justify-end">
           <button
             type="button"
             onClick={() => setConfirmClear(true)}
@@ -260,28 +258,34 @@ export function CartView({
           </button>
         </div>
       </div>
-      <section className="min-w-0 rounded-3xl border border-line bg-surface p-5 shadow-[0_12px_32px_-22px_rgba(36,28,24,0.4)] sm:p-6">
-        <h2 className="font-display text-2xl text-ink">Order summary</h2>
+      <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-24">
+      <section className="rounded-[1.6rem] bg-ink p-5 text-background sm:p-6">
+        <h2 className="font-display text-2xl">Order summary</h2>
         <dl className="mt-4 space-y-2 text-sm">
           <div className="flex justify-between gap-4">
-            <dt className="text-muted">Items</dt>
-            <dd className="font-medium text-ink tabular-nums">{cart.items.length}</dd>
+            <dt className="text-background/70">Items</dt>
+            <dd className="font-medium tabular-nums">{cart.items.length}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-muted">Total quantity</dt>
-            <dd className="font-medium text-ink tabular-nums">{cart.itemCount}</dd>
+            <dt className="text-background/70">Total quantity</dt>
+            <dd className="font-medium tabular-nums">{cart.itemCount}</dd>
           </div>
-          <div className="flex justify-between gap-4 border-t border-line pt-3 text-base">
-            <dt className="font-medium text-ink">Estimated total</dt>
-            <dd className="font-semibold text-ink tabular-nums">
-              {formatInr(cart.subtotal)}
-            </dd>
+          <div className="flex justify-between gap-4 border-t border-white/15 pt-3 text-base">
+            <dt className="font-medium">Estimated total</dt>
+            <dd className="font-semibold tabular-nums">{formatInr(cart.subtotal)}</dd>
           </div>
         </dl>
-        <p className="mt-3 text-sm leading-6 text-muted">
+        <p className="mt-3 text-sm leading-6 text-background/70">
           This total uses the selling price. WhatsApp opens a draft message. The
           order is sent only after you press Send there.
         </p>
+        <div className="mt-5">
+          <ButtonLink href="/products" className="w-full">
+            Continue Shopping
+          </ButtonLink>
+        </div>
+      </section>
+      <section className="rounded-[1.6rem] border border-line bg-surface p-5 sm:p-6">
         <form
           className="mt-6 space-y-4"
           onSubmit={(event) => {
@@ -421,6 +425,7 @@ export function CartView({
           </div>
         </form>
       </section>
+      </div>
       {confirmClear ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-ink/40 px-4">
           <div

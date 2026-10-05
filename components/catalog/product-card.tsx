@@ -7,6 +7,7 @@ import { ProductPrice } from "@/components/catalog/product-price";
 import { ProductVisual } from "@/components/catalog/product-visual";
 import { QuantitySelector } from "@/components/catalog/quantity-selector";
 import { maxCartQuantity } from "@/lib/cart";
+import { discountPercent } from "@/lib/money";
 import type { Product } from "@/types/catalog";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -14,6 +15,7 @@ export function ProductCard({ product }: { product: Product }) {
   const [capped, setCapped] = useState(false);
   const lastClick = useRef(0);
   const href = `/products/${product.id}`;
+  const discount = discountPercent(product.mrp, product.price);
   const quantity = cart.ready
     ? (cart.items.find((item) => item.slug === product.id)?.quantity ?? 0)
     : 0;
@@ -51,19 +53,27 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-[0_10px_30px_-18px_rgba(36,28,24,0.45)] transition duration-200 hover:-translate-y-0.5 hover:border-gold/80 hover:shadow-[0_16px_36px_-18px_rgba(154,53,24,0.35)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-line bg-surface transition duration-200 hover:-translate-y-1 hover:border-accent/40 motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <Link
         href={href}
         aria-label={`View ${product.name}`}
-        className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="relative block overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
-        <ProductVisual product={product} />
+        <ProductVisual
+          product={product}
+          className="aspect-square transition duration-300 group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+        />
+        {discount > 0 ? (
+          <span className="absolute top-3 right-3 z-10 rounded-full bg-accent-strong px-2.5 py-1 text-xs font-semibold text-accent-foreground">
+            {discount}% OFF
+          </span>
+        ) : null}
       </Link>
       <div className="flex flex-1 flex-col p-4 sm:p-5">
-        <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">
+        <p className="text-xs font-semibold tracking-[0.16em] text-accent-strong uppercase">
           {product.categoryName}
         </p>
-        <h3 className="mt-2 font-display text-xl leading-tight text-balance text-ink">
+        <h3 className="mt-2 font-display text-2xl leading-tight text-balance text-ink">
           <Link
             href={href}
             className="rounded-sm transition hover:text-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -71,9 +81,8 @@ export function ProductCard({ product }: { product: Product }) {
             {product.name}
           </Link>
         </h3>
-        <p className="mt-2 text-sm leading-6 text-muted">{product.summary}</p>
-        <div className="mt-4">
-          <ProductPrice mrp={product.mrp} price={product.price} />
+        <div className="mt-3">
+          <ProductPrice mrp={product.mrp} price={product.price} showBadge={false} />
         </div>
         {quantity > 0 ? (
           <div className="mt-5">
@@ -94,7 +103,7 @@ export function ProductCard({ product }: { product: Product }) {
             type="button"
             disabled={!cart.ready}
             onClick={add}
-            className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-accent-strong px-4 text-sm font-medium text-accent-foreground transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+            className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-accent-strong px-4 text-sm font-semibold text-accent-foreground transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
           >
             Add to Cart
           </button>

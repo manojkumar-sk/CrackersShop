@@ -62,10 +62,11 @@ export function Navbar({
   }, [isOpen, close]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface/95 shadow-[0_8px_24px_-18px_rgba(36,24,18,0.45)] backdrop-blur-md">
-      <div className="h-1 bg-gradient-to-r from-accent-deep via-accent to-gold" aria-hidden="true" />
+    <header className="sticky top-0 z-40 bg-ink text-background">
+      <div className="h-1 bg-gradient-to-r from-gold via-accent to-gold" aria-hidden="true" />
       <Container className="flex h-16 items-center gap-3">
         <Logo
+          tone="inverse"
           name={shopName}
           logoUrl={logoUrl}
           onClick={close}
@@ -83,10 +84,10 @@ export function Navbar({
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={`rounded-full px-3 py-2 text-sm whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${
+                className={`rounded-full px-3 py-2 text-sm whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold ${
                   active
-                    ? "bg-ink text-background"
-                    : "text-ink/80 hover:bg-background hover:text-ink"
+                    ? "bg-gold text-ink"
+                    : "text-background/80 hover:bg-white/10 hover:text-background"
                 }`}
               >
                 {link.label}
@@ -105,12 +106,12 @@ export function Navbar({
                 ? `Cart, ${itemCount} ${itemCount === 1 ? "item" : "items"}`
                 : "Cart"
             }
-            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-ink px-3 text-sm font-medium text-background transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-4"
+            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-gold px-3 text-sm font-semibold text-ink transition hover:bg-[#e6c97a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-background sm:px-4"
           >
             <BagIcon />
             <span className="hidden sm:inline">Cart</span>
             {ready ? (
-              <span className="grid min-w-5 place-items-center rounded-full bg-gold px-1.5 text-xs leading-5 font-semibold text-ink">
+              <span className="grid min-w-5 place-items-center rounded-full bg-ink px-1.5 text-xs leading-5 font-semibold text-background">
                 {itemCount}
               </span>
             ) : null}
@@ -118,7 +119,7 @@ export function Navbar({
           <button
             ref={toggleRef}
             type="button"
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent lg:hidden"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-white/20 text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold lg:hidden"
             aria-expanded={isOpen}
             aria-controls="mobile-nav"
             onClick={toggle}
@@ -138,11 +139,11 @@ export function Navbar({
           aria-label="Mobile"
           aria-hidden={!isOpen}
           inert={!isOpen}
-          className="min-h-0 overflow-hidden bg-background"
+          className="min-h-0 overflow-hidden bg-ink"
         >
           <Container
             className={`flex max-h-[calc(100dvh-4.25rem)] flex-col gap-1 overflow-y-auto py-3 ${
-              isOpen ? "border-t border-line" : ""
+              isOpen ? "border-t border-white/10" : ""
             }`}
           >
             {navLinks.map((link, index) => (
@@ -151,7 +152,7 @@ export function Navbar({
                 ref={index === 0 ? firstLinkRef : undefined}
                 href={link.href}
                 onClick={close}
-                className="rounded-xl px-3 py-3 text-base text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="rounded-xl px-3 py-3 text-base text-background hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
               >
                 {link.label}
               </Link>
@@ -159,7 +160,7 @@ export function Navbar({
             <Link
               href="/cart"
               onClick={close}
-              className="rounded-xl px-3 py-3 text-base text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="rounded-xl px-3 py-3 text-base text-background hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
               {ready ? `Cart (${itemCount})` : "Cart"}
             </Link>

@@ -4,10 +4,12 @@ export function ProductPrice({
   mrp,
   price,
   size = "card",
+  showBadge = true,
 }: {
   mrp: number;
   price: number;
   size?: "card" | "detail";
+  showBadge?: boolean;
 }) {
   const discount = discountPercent(mrp, price);
   const sellingClass =
@@ -28,7 +30,7 @@ export function ProductPrice({
           <span className="sr-only">Selling price </span>
           {formatInr(price)}
         </p>
-        {discount > 0 ? (
+        {showBadge && discount > 0 ? (
           <p className="rounded-full bg-accent-strong/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-accent-strong">
             {discount}% OFF
           </p>
