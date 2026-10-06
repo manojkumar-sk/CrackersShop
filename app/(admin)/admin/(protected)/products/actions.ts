@@ -9,7 +9,6 @@ import {
   imageExtension,
   imageFileMessage,
   isUuid,
-  parsePricePair,
   parseProductFields,
   slugFromName,
   type ProductInput,
@@ -499,57 +498,5 @@ export async function deleteProduct(
   );
   revalidatePath("/admin/products");
   revalidatePath("/admin/categories");
-  return { ok: true };
-}
-
-export async function updateProductPrices(
-  productId: string,
-  formData: FormData,
-): Promise<ActionFailure | { ok: true }> {
-  formData.delete("shop_id");
-
-  if (!isUuid(productId)) {
-    return failure("We could not find that product.");
-  }
-
-  const prices = parsePricePair(
-    String(formData.get("mrp") ?? ""),
-    String(formData.get("price") ?? ""),
-  );
-
-  if (!prices.ok) {
-    return prices;
-  }
-
-  const admin = await adminClient();
-
-  if (!admin.ok) {
-    return admin;
-  }
-
-  const updated = await admin.supabase
-    .from("products")
-    .update({
-      mrp: prices.mrp,
-      selling_price: prices.price,
-      discount_percentage: prices.discount,
-    })
-    .eq("id", productId)
-    .eq("shop_id", admin.shopId)
-    .select("id");
-
-  if (updated.error) {
-    console.error("Product price update failed:", updated.error.message);
-    return failure("We could not save these prices. Please try again.");
-  }
-
-  if ((updated.data?.length ?? 0) === 0) {
-    return failure("We could not find that product.");
-  }
-
-  revalidatePath("/admin/price-list");
-  revalidatePath("/admin/products");
-  revalidatePath("/");
-  revalidatePath("/products");
   return { ok: true };
 }

@@ -10,6 +10,7 @@ import {
   getActiveProducts,
 } from "@/lib/catalog";
 import { storefrontMetadata } from "@/lib/seo";
+import { getOfficialPriceList } from "@/lib/price-list";
 import { getPublicShop, ShopUnavailableError } from "@/lib/shop";
 import type { Category, Product } from "@/types/catalog";
 
@@ -29,6 +30,7 @@ export default async function ProductsPage({
   let categories: Category[] = [];
   let products: Product[] = [];
   let unavailable = false;
+  let priceListUrl: string | null = null;
 
   try {
     const shop = await getPublicShop();
@@ -37,6 +39,7 @@ export default async function ProductsPage({
       return null;
     }
 
+    priceListUrl = (await getOfficialPriceList(shop.id))?.fileUrl ?? null;
     [categories, products] = await Promise.all([
       getActiveCategories(shop.id),
       getActiveProducts(shop.id),
@@ -60,6 +63,16 @@ export default async function ProductsPage({
         title="All Crackers"
         description="Search the shelf, filter by category, and sort by price, discount, or name. Photos will replace the colour panels later."
       />
+      {priceListUrl ? (
+        <a
+          href={priceListUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-accent-strong px-5 text-sm font-medium text-accent-foreground hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Download Price List
+        </a>
+      ) : null}
       <div className="mt-8">
         {unavailable ? (
           <CatalogNotice
