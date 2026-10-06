@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { quoteCart } from "@/app/(storefront)/cart/quote";
 import { useCart } from "@/components/cart/cart-provider";
 import { QuantitySelector } from "@/components/catalog/quantity-selector";
@@ -20,6 +20,38 @@ import { whatsAppOrderUrl } from "@/lib/whatsapp-order";
 
 const fieldClassName =
   "h-11 w-full min-w-0 rounded-full border border-line bg-surface px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
+type NoticeFocus = "name" | "mobile" | "address" | "note";
+
+type CheckoutNotice = {
+  title: string;
+  message: string;
+  focus: NoticeFocus | null;
+};
+
+function checkoutNotice(message: string): CheckoutNotice {
+  if (message.startsWith("Enter the customer name") || message.startsWith("Use a name")) {
+    return { title: "Name Required", message, focus: "name" };
+  }
+
+  if (message.startsWith("Enter a valid Indian mobile")) {
+    return { title: "Invalid Mobile Number", message, focus: "mobile" };
+  }
+
+  if (message.toLowerCase().includes("address")) {
+    return { title: "Invalid Address", message, focus: "address" };
+  }
+
+  if (message.startsWith("Use a note")) {
+    return { title: "Note Too Long", message, focus: "note" };
+  }
+
+  if (message.startsWith("Minimum order")) {
+    return { title: "Minimum Order Amount", message, focus: null };
+  }
+
+  return { title: "Check your order", message, focus: null };
+}
 
 export function CartView({
   phones,
@@ -43,6 +75,60 @@ export function CartView({
   const [pending, setPending] = useState(false);
   const [pdfPending, setPdfPending] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [notice, setNotice] = useState<CheckoutNotice | null>(null);
+  const noticeTitleId = useId();
+  const noticeCloseRef = useRef<HTMLButtonElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const mobileRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLTextAreaElement>(null);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+  const noticeFocus = useRef<NoticeFocus | null>(null);
+
+  function showNotice(message: string) {
+    const next = checkoutNotice(message);
+    noticeFocus.current = next.focus;
+    setError(message);
+    setNotice(next);
+  }
+
+  function closeNotice() {
+    setNotice(null);
+  }
+
+  useEffect(() => {
+    if (!notice) {
+      const focus = noticeFocus.current;
+      noticeFocus.current = null;
+
+      if (focus === "name") {
+        nameRef.current?.focus();
+      } else if (focus === "mobile") {
+        mobileRef.current?.focus();
+      } else if (focus === "address") {
+        addressRef.current?.focus();
+      } else if (focus === "note") {
+        noteRef.current?.focus();
+      }
+
+      return;
+    }
+
+    noticeCloseRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setNotice(null);
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [notice]);
 
   useEffect(() => {
     if (!confirmClear) {
@@ -90,7 +176,7 @@ export function CartView({
     setError("");
 
     if (!meetsMinimumOrder(cart.subtotal)) {
-      setError(
+      showNotice(
         `Minimum order value is ${formatInr(minimumOrderValue)}. Add ${formatInr(minimumOrderShortfall(cart.subtotal))} more to place this order.`,
       );
       return;
@@ -99,7 +185,7 @@ export function CartView({
     const parsed = parseCheckoutDetails({ name, mobile, address, note });
 
     if (!parsed.ok) {
-      setError(parsed.message);
+      showNotice(parsed.message);
       return;
     }
 
@@ -113,7 +199,7 @@ export function CartView({
         items: cart.items,
       });
     } catch {
-      setError("We could not create the PDF. Please try again.");
+      showNotice("We could not create the PDF. Please try again.");
     } finally {
       setPdfPending(false);
     }
@@ -127,12 +213,12 @@ export function CartView({
     const parsed = parseCheckoutDetails({ name, mobile, address, note });
 
     if (!parsed.ok) {
-      setError(parsed.message);
+      showNotice(parsed.message);
       return;
     }
 
     if (!meetsMinimumOrder(cart.subtotal)) {
-      setError(
+      showNotice(
         `Minimum order value is ${formatInr(minimumOrderValue)}. Add ${formatInr(minimumOrderShortfall(cart.subtotal))} more to place this order.`,
       );
       return;
@@ -145,7 +231,7 @@ export function CartView({
     setPending(false);
 
     if (!quote.ok) {
-      setError(quote.message);
+      showNotice(quote.message);
       return;
     }
 
@@ -155,7 +241,7 @@ export function CartView({
 
     if (missing.length > 0) {
       setBlocked(missing.map((item) => item.slug));
-      setError(
+      showNotice(
         `These products are no longer available: ${missing.map((item) => item.name).join(", ")}. Remove them before sending the order.`,
       );
       return;
@@ -173,7 +259,7 @@ export function CartView({
     }
 
     if (!meetsMinimumOrder(cartSubtotal(applied.items))) {
-      setError(
+      showNotice(
         `Minimum order value is ${formatInr(minimumOrderValue)}. Add ${formatInr(minimumOrderShortfall(cartSubtotal(applied.items)))} more to place this order.`,
       );
       return;
@@ -182,7 +268,7 @@ export function CartView({
     const url = whatsAppOrderUrl(phones, applied.items, parsed.value);
 
     if (!url) {
-      setError("WhatsApp ordering is not available for this shop.");
+      showNotice("WhatsApp ordering is not available for this shop.");
       return;
     }
     const popup = window.open(url, "_blank", "noopener,noreferrer");
@@ -288,6 +374,7 @@ export function CartView({
       <section className="rounded-[1.6rem] border border-line bg-surface p-5 sm:p-6">
         <form
           className="mt-6 space-y-4"
+          noValidate
           onSubmit={(event) => {
             event.preventDefault();
             void sendOrder();
@@ -299,7 +386,7 @@ export function CartView({
               Name
             </span>
             <input
-              required
+              ref={nameRef}
               value={name}
               autoComplete="name"
               onChange={(event) => setName(event.target.value)}
@@ -311,7 +398,7 @@ export function CartView({
               Mobile number
             </span>
             <input
-              required
+              ref={mobileRef}
               type="tel"
               inputMode="tel"
               autoComplete="tel"
@@ -326,7 +413,7 @@ export function CartView({
               Address
             </span>
             <textarea
-              required
+              ref={addressRef}
               value={address}
               rows={4}
               autoComplete="street-address"
@@ -339,6 +426,7 @@ export function CartView({
               Additional note <span className="font-normal text-muted">(optional)</span>
             </span>
             <textarea
+              ref={noteRef}
               value={note}
               rows={3}
               onChange={(event) => setNote(event.target.value)}
@@ -390,9 +478,9 @@ export function CartView({
               {pdfPending ? "Preparing PDF…" : "Download Order PDF"}
             </button>
             {whatsappNumber ? (
-              <button
-                type="submit"
-                disabled={!meetsMinimum || pending || pdfPending}
+            <button
+              type="submit"
+              disabled={pending || pdfPending}
                 className="inline-flex h-11 w-full items-center justify-center rounded-full bg-accent-strong px-5 text-sm font-medium text-accent-foreground transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
               >
                 {pending ? "Checking prices…" : "Send Order via WhatsApp"}
@@ -411,6 +499,33 @@ export function CartView({
         </form>
       </section>
       </div>
+      {notice ? (
+        <div
+          className="fixed inset-0 z-[60] grid place-items-center bg-[#120818]/80 p-4"
+          onClick={closeNotice}
+        >
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby={noticeTitleId}
+            className="w-full max-w-md rounded-[1.6rem] border border-gold bg-surface p-6 shadow-[0_24px_60px_-24px_rgba(26,16,36,0.8)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id={noticeTitleId} className="font-display text-2xl text-ink">
+              {notice.title}
+            </h2>
+            <p className="mt-3 text-base leading-7 text-ink">{notice.message}</p>
+            <button
+              ref={noticeCloseRef}
+              type="button"
+              onClick={closeNotice}
+              className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-full bg-accent-strong px-5 text-sm font-medium text-accent-foreground hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      ) : null}
       {confirmClear ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-ink/40 px-4">
           <div
