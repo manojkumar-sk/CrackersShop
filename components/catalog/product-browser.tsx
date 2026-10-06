@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ProductCard } from "@/components/catalog/product-card";
+import { ProductTable } from "@/components/catalog/product-table";
 import { discountPercent } from "@/lib/money";
 import type { Category, Product } from "@/types/catalog";
 
@@ -86,6 +86,35 @@ export function ProductBrowser({
 
     return sorted;
   }, [products, categories, featuredIds, query, categoryId, sort]);
+
+  const groups = useMemo(() => {
+    const byName = new Map<string, Product[]>();
+
+    for (const product of visibleProducts) {
+      const list = byName.get(product.categoryName) ?? [];
+      list.push(product);
+      byName.set(product.categoryName, list);
+    }
+
+    const ordered: { name: string; products: Product[] }[] = [];
+
+    for (const category of categories) {
+      const list = byName.get(category.name);
+
+      if (list && list.length > 0) {
+        ordered.push({ name: category.name, products: list });
+        byName.delete(category.name);
+      }
+    }
+
+    for (const [name, list] of byName) {
+      if (list.length > 0) {
+        ordered.push({ name, products: list });
+      }
+    }
+
+    return ordered;
+  }, [visibleProducts, categories]);
 
   const filtersActive =
     query.trim().length > 0 || categoryId !== "all" || sort !== "featured";
@@ -194,9 +223,13 @@ export function ProductBrowser({
           ) : null}
         </div>
       ) : (
-        <div className="mt-6 flex min-w-0 flex-col gap-3">
-          {visibleProducts.map((product) => (
-            <ProductCard key={product.id} product={product} layout="list" />
+        <div className="mt-6 flex min-w-0 flex-col gap-6">
+          {groups.map((group) => (
+            <ProductTable
+              key={group.name}
+              categoryName={group.name}
+              products={group.products}
+            />
           ))}
         </div>
       )}
